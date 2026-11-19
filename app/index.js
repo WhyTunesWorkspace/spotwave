@@ -7,6 +7,19 @@ var React = Spicetify.React;
 var h = React.createElement;
 var PF = Spicetify.Platform;
 
+var ICONS = {
+  play: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M7.05 3.606l13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z"/></svg>',
+  heart: '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M8 13.5S2.3 10.2 2.3 6.7A3.2 3.2 0 0 1 8 4.6a3.2 3.2 0 0 1 5.7 2.1c0 3.5-5.7 6.8-5.7 6.8z"/></svg>',
+  close: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>',
+  ban: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M4 12L12 4"/></svg>',
+  more: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+
+function icon(name) {
+  return h("span", { className: "wave-svg", dangerouslySetInnerHTML: { __html: ICONS[name] || "" } });
+}
+
 var LS_KEY = "wave.v1";
 var HOUR = 3600000;
 var DAY = 86400000;
@@ -139,6 +152,14 @@ function fmtDuration(ms) {
   var m = Math.floor(total / 60);
   var s = total % 60;
   return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+function totalDurationText(ms) {
+  if (!ms) return "";
+  var m = Math.round(ms / 60000);
+  var hrs = Math.floor(m / 60);
+  m = m % 60;
+  return hrs ? hrs + " ч " + m + " мин" : m + " мин";
 }
 
 function normalizeImage(url) {
@@ -902,10 +923,10 @@ function TrackRow(props) {
     ),
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
-      h("button", { className: "wave-icon", title: "Нравится", onClick: function () { likeTrack(t); } }, "\u2665"),
-      h("button", { className: "wave-icon", title: "Убрать из волны", onClick: function () { dislikeTrack(t); } }, "\u2715"),
-      h("button", { className: "wave-icon", title: "Больше не этот артист", onClick: function () { muteArtist(t); } }, "\u2298"),
-      h("button", { className: "wave-icon play", title: "Играть", onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, "\u25B6")
+      h("button", { className: "wave-icon", title: "Нравится", onClick: function () { likeTrack(t); } }, icon("heart")),
+      h("button", { className: "wave-icon", title: "Убрать из волны", onClick: function () { dislikeTrack(t); } }, icon("close")),
+      h("button", { className: "wave-icon", title: "Больше не этот артист", onClick: function () { muteArtist(t); } }, icon("ban")),
+      h("button", { className: "wave-icon play", title: "Играть", onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
     )
   );
 }
@@ -1155,29 +1176,52 @@ function WaveApp() {
   var curUri = curItem && curItem.uri;
   var st = stats();
   var wave = S.wave && S.wave.tracks ? S.wave.tracks : [];
+  var totalMs = wave.reduce(function (a, t) { return a + (t.durationMs || 0); }, 0);
   var heroCover = wave.length && wave[0].album ? wave[0].album.image : (curItem && curItem.album && curItem.album.images && curItem.album.images[0] ? curItem.album.images[0].url : "");
 
   return h("div", { className: "wave-app" },
-    h("div", { className: "wave-hero", style: heroCover ? { "--wave-hero": 'url("' + heroCover + '")' } : {} },
-      h("div", { className: "wave-hero-glow" }),
-      h("div", { className: "wave-orb", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} },
-        heroCover ? null : h("span", { className: "wave-orb-mark" }, "~")),
-      h("div", { className: "wave-hero-text" },
-        h("div", { className: "wave-kicker" }, "персональное радио"),
-        h("h1", { className: "wave-title" }, "Волна"),
-        h("div", { className: "wave-subtitle" },
+    h("header", { className: "wave-header" },
+      h("div", { className: "wave-header-bg", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} }),
+      h("div", { className: "wave-header-cover", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} },
+        heroCover ? null : h("span", { className: "wave-header-mark" }, "~")),
+      h("div", { className: "wave-header-info" },
+        h("div", { className: "wave-header-type" }, "Радио"),
+        h("h1", { className: "wave-header-title" }, "Волна"),
+        h("div", { className: "wave-header-meta" },
           wave.length
-            ? ((S.wave && S.wave.seedLabel) ? "Волна " + S.wave.seedLabel + " · " : "") +
-              wave.length + " треков · " + (S.wave && S.wave.sources ? S.wave.sources.length : 0) + " источн. · собрана " + new Date(S.wave.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
+            ? [
+                (S.wave && S.wave.seedLabel) ? "Волна " + S.wave.seedLabel : null,
+                wave.length + " треков",
+                totalDurationText(totalMs)
+              ].filter(Boolean).join(" · ")
             : "бесконечный поток по твоему вкусу"
         )
-      ),
-      h("div", { className: "wave-hero-actions" },
-        h("button", { className: "wave-btn primary", disabled: !!busy, onClick: run },
-          busy ? busy : (wave.length ? "Новая волна" : "Собрать волну")),
-        wave.length ? h("button", { className: "wave-btn", disabled: !!busy, onClick: more }, "Ещё") : null,
-        wave.length ? h("button", { className: "wave-btn", disabled: !!busy, onClick: save }, "В плейлист") : null
       )
+    ),
+
+    h("div", { className: "wave-actions" },
+      h("button", {
+        className: "wave-play-big",
+        disabled: !!busy,
+        title: "Слушать",
+        onClick: function () {
+          if (wave.length && S.wave && S.wave.liveUri) {
+            api.playContext(S.wave.liveUri).catch(function () { run(); });
+          } else {
+            run();
+          }
+        }
+      }, icon("play")),
+
+      h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: function () { run(); } },
+        wave.length ? "Новая волна" : "Собрать волну"),
+
+      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: more }, "Продлить") : null,
+      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: save }, "Сохранить в плейлист") : null,
+
+      busy ? h("span", { className: "wave-busy" }, busy) : null,
+      h("span", { className: "wave-actions-spacer" }),
+      h("button", { className: "wave-icon-btn", title: "Настройки", onClick: function () { setShowAdvanced(!showAdvanced); } }, icon("gear"))
     ),
 
     error ? h("div", { className: "wave-error" }, error) : null,
@@ -1199,7 +1243,7 @@ function WaveApp() {
             key: s.uri,
             className: "wave-chip" + (on ? " on" : ""),
             onClick: function () { toggleSource(s.uri); }
-          }, h("span", { className: "wave-chip-icon" }, s.icon), s.name);
+          }, s.name);
         }),
         playlists.loading ? h("span", { className: "wave-muted" }, "загружаю плейлисты…") : null
       ),
@@ -1279,11 +1323,8 @@ function WaveApp() {
         })
       )
     ) : h("div", { className: "wave-empty" },
-      h("div", { className: "wave-empty-orb" }, "~"),
-      h("div", null,
-        h("h3", null, "Пока пусто"),
-        h("p", null, "Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.")
-      )
+      h("h3", null, "Здесь появится волна"),
+      h("p", null, "Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.")
     ),
 
     showStats ? h(StatsPanel, { stats: computeStats() }) : null,
