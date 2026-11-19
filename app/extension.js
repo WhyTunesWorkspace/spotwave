@@ -32,23 +32,57 @@
         icon = icons.radio || icons.queue || icons.volume || null;
       } catch (e) {}
 
-      var item = new Spicetify.ContextMenu.Item(
-        "Волна по плейлисту",
-        function (uris) {
-          var uri = (uris || [])[0];
-          if (!uri) return;
-          try { localStorage.setItem("wave.pendingSource", uri); } catch (e) {}
-          try { Spicetify.Platform.History.push("/wave"); } catch (e) {}
-        },
-        function (uris) {
-          if (!uris || uris.length !== 1) return false;
-          return String(uris[0]).indexOf("spotify:playlist:") === 0 &&
-            String(uris[0]).indexOf("spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ") !== 0;
-        },
-        icon
-      );
+      function go() {
+        try { Spicetify.Platform.History.push("/wave"); } catch (e) {}
+      }
 
-      item.register();
+      function setPending(uri) {
+        try { localStorage.setItem("wave.pendingSource", uri); } catch (e) {}
+        go();
+      }
+
+      function setSeed(type, uri) {
+        try { localStorage.setItem("wave.seed", JSON.stringify({ type: type, uri: uri })); } catch (e) {}
+        go();
+      }
+
+      function one(uris, prefix) {
+        return uris && uris.length === 1 && String(uris[0]).indexOf(prefix) === 0;
+      }
+
+      var defs = [
+        {
+          name: "Волна по плейлисту",
+          run: function (u) { setPending(u[0]); },
+          ok: function (u) {
+            return one(u, "spotify:playlist:") && String(u[0]).indexOf("spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ") !== 0;
+          }
+        },
+        {
+          name: "Волна по этому треку",
+          run: function (u) { setSeed("track", u[0]); },
+          ok: function (u) { return one(u, "spotify:track:"); }
+        },
+        {
+          name: "Волна по исполнителю",
+          run: function (u) { setSeed("artist", u[0]); },
+          ok: function (u) { return one(u, "spotify:artist:"); }
+        }
+      ];
+
+      defs.forEach(function (def) {
+        try {
+          var item = new Spicetify.ContextMenu.Item(
+            def.name,
+            function (uris) { def.run(uris || []); },
+            def.ok,
+            icon
+          );
+          item.register();
+        } catch (e) {
+          console.warn("[wave] menu item failed", def.name, e);
+        }
+      });
     } catch (e) {
       console.warn("[wave] context menu failed", e);
       menuInstalled = false;

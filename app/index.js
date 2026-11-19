@@ -196,12 +196,41 @@ var api = {
     catch (e) { return "spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ"; }
   },
 
-  playlists: async function () {
+  allPlaylists: async function () {
     var r = await PF.RootlistAPI.getContents();
     var items = (r && r.items) || [];
     return items
       .filter(function (i) { return i && i.type === "playlist" && i.uri && !i.isNotFound; })
       .map(function (i) { return { uri: i.uri, name: i.name || "Плейлист" }; });
+  },
+
+  /* Для интерфейса: служебные плейлисты Волны не показываем как источники. */
+  playlists: async function () {
+    var list = await api.allPlaylists();
+    return list.filter(function (p) { return !/^Волна · /.test(p.name); });
+  },
+
+  artistTopTracks: async function (artistUri) {
+    var r = await Spicetify.GraphQL.Request(Spicetify.GraphQL.Definitions.queryArtistOverview, {
+      uri: artistUri,
+      locale: "en",
+      includePrerelease: true
+    });
+    var a = r && r.data && r.data.artistUnion;
+    var items = (a && a.discography && a.discography.topTracks && a.discography.topTracks.items) || [];
+    var uris = items
+      .map(function (it) { return it && it.track && it.track.uri; })
+      .filter(Boolean);
+
+    if (!uris.length) {
+      var found = (JSON.stringify(items).match(/spotify:track:[A-Za-z0-9]{22}/g) || []);
+      uris = found.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+    }
+
+    return {
+      uris: uris.slice(0, 10),
+      name: (a && a.profile && a.profile.name) || ""
+    };
   },
 
   recs: async function (contextUri, skipIds, limit) {
@@ -303,13 +332,12 @@ var api = {
     return uri;
   },
 
-  /* Служебный плейлист, который всегда содержит текущую волну.
-   * Играем его как контекст — тогда next/prev/очередь/шаффл работают нативно. */
-  livePlaylist: async function (tracks) {
-    var playlists = await api.playlists();
-    var live = playlists.filter(function (p) { return p.name === "Волна · Live"; })[0];
-    var uri = live ? live.uri : await PF.RootlistAPI.createPlaylist("Волна · Live", {});
-    if (!uri) throw new Error("Не удалось создать плейлист «Волна · Live»");
+  /* Служебный плейлист: используется и для «Волна · Live», и для seed-волн. */
+  fillPlaylist: async function (name, tracks) {
+    var list = await api.allPlaylists();
+    var found = list.filter(function (p) { return p.name === name; })[0];
+    var uri = found ? found.uri : await PF.RootlistAPI.createPlaylist(name, {});
+    if (!uri) throw new Error("Не удалось создать плейлист «" + name + "»");
 
     try {
       var c = await PF.PlaylistAPI.getContents(uri, { limit: 400 });
@@ -318,7 +346,7 @@ var api = {
         .map(function (x) { return { uid: x.uid, uri: x.uri }; });
       if (items.length) await PF.PlaylistAPI.remove(uri, items);
     } catch (e) {
-      console.warn("[wave] clear live playlist failed", e);
+      console.warn("[wave] clear playlist failed", e);
     }
 
     var uris = tracks.map(function (t) { return t.uri; });
@@ -326,6 +354,32 @@ var api = {
       await PF.PlaylistAPI.add(uri, uris.slice(i, i + 50), {});
     }
     return uri;
+  },
+
+  /* Служебный плейлист, который всегда содержит текущую волну.
+   * Играем его как контекст — тогда next/prev/очередь/шаффл работают нативно. */
+  livePlaylist: function (tracks) {
+    return api.fillPlaylist("Волна · Live", tracks);
+  },
+
+  seedPlaylist: function (tracks) {
+    return api.fillPlaylist("Волна · Seed", tracks);
+  },
+
+  trackInfo: async function (uri) {
+    try {
+      var r = await Spicetify.GraphQL.Request(Spicetify.GraphQL.Definitions.decorateContextTracks, { uris: [uri] });
+      var t = r && r.data && r.data.tracks && r.data.tracks[0];
+      if (!t) return null;
+      return {
+        name: t.name,
+        artists: ((t.artists && t.artists.items) || []).map(function (a) {
+          return { uri: a.uri, name: (a.profile && a.profile.name) || "" };
+        })
+      };
+    } catch (e) {
+      return null;
+    }
   },
 
   playContext: function (uri, skipToUri) {
@@ -842,7 +896,8 @@ function WaveApp() {
     setBusy("Добавляю…");
     try {
       var opts = buildOpts(Math.max(10, Math.round(S.settings.length / 2)));
-      var extra = await generate(selected, opts);
+      var src = (S.wave && S.wave.sources && S.wave.sources.length) ? S.wave.sources : selected;
+      var extra = await generate(src, opts);
       if (!extra.length) throw new Error("Не удалось подобрать новые треки.");
       var all = (S.wave && S.wave.tracks ? S.wave.tracks : []).concat(extra);
       setBusy("Продлеваю…");
@@ -873,6 +928,59 @@ function WaveApp() {
     }
   }
 
+  async function runSeed(seed) {
+    if (busy) return;
+    setError("");
+    setBusy("Готовлю волну…");
+    try {
+      var uris = [];
+      var label = "";
+
+      if (seed.type === "artist") {
+        var info = await api.artistTopTracks(seed.uri);
+        uris = info.uris;
+        label = info.name ? "по артисту «" + info.name + "»" : "по артисту";
+      } else {
+        uris = [seed.uri];
+        var meta = await api.trackInfo(seed.uri);
+        if (meta) rememberMeta([{ uri: seed.uri, name: meta.name, artists: meta.artists }]);
+        label = meta && meta.name ? "по треку «" + meta.name + "»" : "по треку";
+      }
+
+      if (!uris.length) throw new Error("Не удалось найти треки для этой волны");
+
+      setBusy("Собираю рекомендации…");
+      var tempUri = await api.seedPlaylist(uris.map(function (u) { return { uri: u }; }));
+
+      var opts = buildOpts();
+      opts.labels = {};
+      opts.labels[tempUri] = label;
+
+      var tracks = await generate([tempUri], opts);
+      if (!tracks.length) throw new Error("Не удалось собрать волну по этому seed");
+
+      setBusy("Запускаю…");
+      var liveUri = await api.livePlaylist(tracks);
+      S.wave = {
+        tracks: tracks,
+        sources: [tempUri],
+        createdAt: now(),
+        liveUri: liveUri,
+        seedType: seed.type,
+        seedUri: seed.uri,
+        seedLabel: label
+      };
+      persist(); notify();
+      await api.playContext(liveUri);
+      Spicetify.showNotification("Волна " + label);
+      setBusy("");
+    } catch (e) {
+      console.error("[wave] seed", e);
+      setError(String((e && e.message) || e));
+      setBusy("");
+    }
+  }
+
   async function save() {
     if (!S.wave || !S.wave.tracks.length) return;
     setBusy("Сохраняю…");
@@ -898,6 +1006,16 @@ function WaveApp() {
     run([pending]);
   }, []);
 
+  React.useEffect(function () {
+    var raw = null;
+    try { raw = localStorage.getItem("wave.seed"); } catch (e) {}
+    if (!raw) return;
+    try { localStorage.removeItem("wave.seed"); } catch (e) {}
+    var seed = null;
+    try { seed = JSON.parse(raw); } catch (e) {}
+    if (seed && seed.uri) runSeed(seed);
+  }, []);
+
   var curItem = Spicetify.Player.data && Spicetify.Player.data.item;
   var curUri = curItem && curItem.uri;
   var st = stats();
@@ -914,7 +1032,8 @@ function WaveApp() {
         h("h1", { className: "wave-title" }, "Волна"),
         h("div", { className: "wave-subtitle" },
           wave.length
-            ? wave.length + " треков · " + (S.wave && S.wave.sources ? S.wave.sources.length : 0) + " источн. · собрана " + new Date(S.wave.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
+            ? ((S.wave && S.wave.seedLabel) ? "Волна " + S.wave.seedLabel + " · " : "") +
+              wave.length + " треков · " + (S.wave && S.wave.sources ? S.wave.sources.length : 0) + " источн. · собрана " + new Date(S.wave.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
             : "бесконечный поток по твоему вкусу"
         )
       ),
