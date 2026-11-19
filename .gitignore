@@ -1,0 +1,10 @@
+# локальные артефакты
+tools/
+backup/
+*.zip
+*.log
+*.tmp
+
+# системное
+.DS_Store
+Thumbs.db
