@@ -24,6 +24,11 @@ var LS_KEY = "wave.v1";
 var HOUR = 3600000;
 var DAY = 86400000;
 
+/* Служебные имена не локализуются: по ним ищутся плейлисты. */
+var LIVE_NAME = "Волна · Live";
+var SEED_NAME = "Волна · Seed";
+var SNAP_PREFIX = "Волна · ";
+
 var DEFAULTS = {
   settings: {
     novelty: 0.45,
@@ -35,7 +40,8 @@ var DEFAULTS = {
     mood: "any",
     autoExtend: true,
     scrobbleEnabled: false,
-    scrobbleToken: ""
+    scrobbleToken: "",
+    lang: "auto"
   },
   artists: {},
   tracks: {},
@@ -75,6 +81,145 @@ function loadState() {
 }
 
 var S = loadState();
+
+/* ------------------------------ i18n ------------------------------ */
+
+var I18N = {
+  en: {
+    " ч ": " h ",
+    " мин": " min",
+    "Без названия": "Untitled",
+    "Плейлист": "Playlist",
+    "Не удалось создать плейлист": "Could not create a playlist",
+    "Не удалось создать плейлист «": "Could not create playlist «",
+    "Всё, что нашлось, уже есть в твоих плейлистах и лайках. Отключи «Только новое» или добавь источники.":
+      "Everything found is already in your playlists and liked songs. Turn off “Only new” or add sources.",
+    "Spotify не вернул рекомендаций. Попробуй другой источник.": "Spotify returned no recommendations. Try another source.",
+    "из твоих лайков": "from your liked songs",
+    "из «": "from «",
+    "подобрано для тебя": "picked for you",
+    "Волна продолжается: +": "Wave continues: +",
+    "Волна запомнила: нравится": "Wave noted: you like it",
+    "Артист убран из волны": "Artist removed from the wave",
+    "Артист": "Artist",
+    "спокойное": "calm",
+    "среднее": "mid",
+    "энергичное": "energetic",
+    "Пн": "Mon", "Вт": "Tue", "Ср": "Wed", "Чт": "Thu", "Пт": "Fri", "Сб": "Sat", "Вс": "Sun",
+    "Прослушано": "Plays",
+    "Скипов": "Skips",
+    "Дослушано": "Finished",
+    "Средний темп": "Avg tempo",
+    "По дням недели": "By weekday",
+    "По часам": "By hour",
+    "Топ артистов": "Top artists",
+    "пока нет данных — послушай волну": "no data yet — play the wave",
+    "Нравится": "Like",
+    "Убрать из волны": "Remove from wave",
+    "Больше не этот артист": "Never this artist",
+    "Играть": "Play",
+    "Мой микс": "My mix",
+    "Оставь хотя бы один источник": "Keep at least one source",
+    "Обновляю список знакомого…": "Refreshing known tracks…",
+    "Знакомых треков: ": "Known tracks: ",
+    "Укажи токен ListenBrainz": "Enter a ListenBrainz token",
+    "токен принят": "token accepted",
+    "ListenBrainz не принял токен": "ListenBrainz rejected the token",
+    "Не удалось проверить токен: сеть или CORS": "Could not verify the token: network or CORS",
+    "Собираю рекомендации…": "Collecting recommendations…",
+    "Пустая волна. Попробуй другой источник.": "Empty wave. Try another source.",
+    "Готовлю очередь…": "Preparing the queue…",
+    "Запускаю…": "Starting…",
+    "Волна собрана: ": "Wave ready: ",
+    " треков": " tracks",
+    "Добавляю…": "Adding…",
+    "Не удалось подобрать новые треки.": "Could not find new tracks.",
+    "Продлеваю…": "Extending…",
+    "Готовлю волну…": "Preparing the wave…",
+    "по артисту «": "by artist «",
+    "по артисту": "by artist",
+    "по треку «": "from track «",
+    "по треку": "from track",
+    "Не удалось найти треки для этой волны": "Could not find tracks for this wave",
+    "Не удалось собрать волну по этому seed": "Could not build a wave from this seed",
+    "Волна ": "Wave ",
+    "Сохраняю…": "Saving…",
+    "Плейлист «": "Playlist «",
+    "» готов — он уже на телефоне": "» is ready — it's already on your phone",
+    "Радио": "Radio",
+    "Волна": "Wave",
+    "бесконечный поток по твоему вкусу": "an endless stream tuned to your taste",
+    "Слушать": "Play",
+    "Новая волна": "New wave",
+    "Собрать волну": "Build wave",
+    "Продлить": "Extend",
+    "Сохранить в плейлист": "Save to playlist",
+    "Настройки": "Settings",
+    "Источники": "Sources",
+    "Скрыть статистику": "Hide stats",
+    "Статистика": "Stats",
+    "Скрыть настройки": "Hide settings",
+    "загружаю плейлисты…": "loading playlists…",
+    "Выбери один плейлист — получишь волну в его настроении. Несколько — микс.":
+      "Pick one playlist for a wave in its mood. Pick several for a mix.",
+    "Настроение": "Mood",
+    "Любое": "Any",
+    "Спокойное": "Calm",
+    "Среднее": "Mid",
+    "Энергичное": "Energetic",
+    "Новизна": "Novelty",
+    "Разнообразие": "Diversity",
+    "Длина": "Length",
+    "Эксперимент": "Exploration",
+    "Только новое — не брать треки из моих плейлистов и лайков":
+      "Only new — skip tracks from my playlists and liked songs",
+    "Автопродление — добирать треки, когда волна заканчивается":
+      "Auto-extend — keep adding tracks as the wave ends",
+    "Исключаю знакомых треков: ": "Excluding known tracks: ",
+    "Список знакомых треков соберётся при первой генерации": "Known tracks will be collected on the first run",
+    "обновить": "refresh",
+    "Скробблить в ListenBrainz — история и рекомендации вне Spotify":
+      "Scrobble to ListenBrainz — history beyond Spotify",
+    "токен ListenBrainz": "ListenBrainz token",
+    "Проверить": "Check",
+    "Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину.":
+      "Token: listenbrainz.org/settings → API token. Tracks played at least half-way are submitted.",
+    "Очередь волны": "Wave queue",
+    "сейчас: ": "now: ",
+    "Здесь появится волна": "Your wave will appear here",
+    "Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.":
+      "Hit “Build wave” — Spotify will pick tracks from your liked songs and playlists, and Wave will learn what you play and skip.",
+    "прослушано: ": "played: ",
+    " · скипов: ": " · skips: ",
+    " · артистов: ": " · artists: ",
+    "Волна учится на скипах и лайках": "Wave learns from skips and likes",
+    "Волна по плейлисту": "Wave from this playlist",
+    "Волна по этому треку": "Wave from this track",
+    "Волна по исполнителю": "Wave by this artist",
+    "Язык": "Language",
+    "Авто": "Auto"
+  }
+};
+
+var LANG_CACHE = null;
+
+function detectLang() {
+  var pref = (S.settings && S.settings.lang) || "auto";
+  if (pref === "ru" || pref === "en") return pref;
+  try {
+    var loc = Spicetify.Locale && Spicetify.Locale.getLocale ? Spicetify.Locale.getLocale() : "";
+    if (loc) return /^ru/i.test(loc) ? "ru" : "en";
+  } catch (e) {}
+  var nav = (typeof navigator !== "undefined" && navigator.language) || "en";
+  return /^ru/i.test(nav) ? "ru" : "en";
+}
+
+function T(s) {
+  if (!LANG_CACHE) LANG_CACHE = detectLang();
+  if (LANG_CACHE === "ru") return s;
+  var v = I18N.en[s];
+  return v == null ? s : v;
+}
 var saveTimer = null;
 function persist() {
   clearTimeout(saveTimer);
@@ -159,7 +304,8 @@ function totalDurationText(ms) {
   var m = Math.round(ms / 60000);
   var hrs = Math.floor(m / 60);
   m = m % 60;
-  return hrs ? hrs + " ч " + m + " мин" : m + " мин";
+  if (!hrs) return m + T(" мин");
+  return m ? hrs + T(" ч ") + m + T(" мин") : hrs + T(" ч ");
 }
 
 function normalizeImage(url) {
@@ -185,7 +331,7 @@ function normalizeItem(x) {
   if (!dur) dur = x.durationMs || x.duration_ms || 0;
   return {
     uri: x.uri || (x.id ? "spotify:track:" + x.id : ""),
-    name: x.name || "Без названия",
+    name: x.name || T("Без названия"),
     artists: artists,
     album: { uri: album.uri || "", name: album.name || "", image: cover },
     durationMs: dur,
@@ -222,13 +368,13 @@ var api = {
     var items = (r && r.items) || [];
     return items
       .filter(function (i) { return i && i.type === "playlist" && i.uri && !i.isNotFound; })
-      .map(function (i) { return { uri: i.uri, name: i.name || "Плейлист" }; });
+      .map(function (i) { return { uri: i.uri, name: i.name || T("Плейлист") }; });
   },
 
   /* Для интерфейса: служебные плейлисты Волны не показываем как источники. */
   playlists: async function () {
     var list = await api.allPlaylists();
-    return list.filter(function (p) { return !/^Волна · /.test(p.name); });
+    return list.filter(function (p) { return p.name.indexOf(SNAP_PREFIX) !== 0; });
   },
 
   artistTopTracks: async function (artistUri) {
@@ -345,7 +491,7 @@ var api = {
 
   createPlaylist: async function (name, tracks) {
     var uri = await PF.RootlistAPI.createPlaylist(name, {});
-    if (!uri) throw new Error("Не удалось создать плейлист");
+    if (!uri) throw new Error(T("Не удалось создать плейлист"));
     var uris = tracks.map(function (t) { return t.uri; });
     for (var i = 0; i < uris.length; i += 50) {
       await PF.PlaylistAPI.add(uri, uris.slice(i, i + 50), {});
@@ -358,7 +504,7 @@ var api = {
     var list = await api.allPlaylists();
     var found = list.filter(function (p) { return p.name === name; })[0];
     var uri = found ? found.uri : await PF.RootlistAPI.createPlaylist(name, {});
-    if (!uri) throw new Error("Не удалось создать плейлист «" + name + "»");
+    if (!uri) throw new Error(T("Не удалось создать плейлист «") + name + "»");
 
     try {
       var c = await PF.PlaylistAPI.getContents(uri, { limit: 400 });
@@ -380,11 +526,11 @@ var api = {
   /* Служебный плейлист, который всегда содержит текущую волну.
    * Играем его как контекст — тогда next/prev/очередь/шаффл работают нативно. */
   livePlaylist: function (tracks) {
-    return api.fillPlaylist("Волна · Live", tracks);
+    return api.fillPlaylist(LIVE_NAME, tracks);
   },
 
   seedPlaylist: function (tracks) {
-    return api.fillPlaylist("Волна · Seed", tracks);
+    return api.fillPlaylist(SEED_NAME, tracks);
   },
 
   trackInfo: async function (uri) {
@@ -563,7 +709,7 @@ async function generate(sourceUris, opts) {
       pool = pool.filter(function (t) {
         return !known.uris[t.uri] && !known.keys[trackKey(t)];
       });
-      if (before !== pool.length) console.info("[wave] отфильтровано знакомых треков:", before - pool.length);
+      if (before !== pool.length) console.info(T("[wave] отфильтровано знакомых треков:"), before - pool.length);
     } catch (e) {
       console.warn("[wave] known filter failed", e);
     }
@@ -586,22 +732,22 @@ async function generate(sourceUris, opts) {
 
   if (!pool.length) {
     throw new Error(opts.onlyNew
-      ? "Всё, что нашлось, уже есть в твоих плейлистах и лайках. Отключи «Только новое» или добавь источники."
-      : "Spotify не вернул рекомендаций. Попробуй другой источник.");
+      ? T("Всё, что нашлось, уже есть в твоих плейлистах и лайках. Отключи «Только новое» или добавь источники.")
+      : T("Spotify не вернул рекомендаций. Попробуй другой источник."));
   }
 
   pool.forEach(function (t) { t._score = scoreTrack(t, opts); });
   var chosen = pickTracks(pool, opts);
 
   var labels = {};
-  labels[api.likedContext()] = "из твоих лайков";
+  labels[api.likedContext()] = T("из твоих лайков");
   try {
     var pls = await api.playlists();
-    pls.forEach(function (p) { labels[p.uri] = "из «" + p.name + "»"; });
+    pls.forEach(function (p) { labels[p.uri] = T("из «") + p.name + "»"; });
   } catch (e) {}
 
   chosen.forEach(function (t) {
-    t.reason = (opts.labels && opts.labels[t._src]) || labels[t._src] || "подобрано для тебя";
+    t.reason = (opts.labels && opts.labels[t._src]) || labels[t._src] || T("подобрано для тебя");
     delete t._src;
     delete t._score;
   });
@@ -650,7 +796,7 @@ async function autoExtend() {
     }
 
     api.livePlaylist(all).catch(function (e) { console.warn("[wave] live refresh failed", e); });
-    Spicetify.showNotification("Волна продолжается: +" + extra.length);
+    Spicetify.showNotification(T("Волна продолжается: +") + extra.length);
   } catch (e) {
     console.warn("[wave] auto-extend failed", e);
   } finally {
@@ -732,7 +878,7 @@ function likeTrack(t) {
     try { Spicetify.Player.setHeart(true); } catch (e) {}
   }
   try { PF.LibraryAPI.add({ uris: [t.uri] }); } catch (e) {}
-  Spicetify.showNotification("Волна запомнила: нравится");
+  Spicetify.showNotification(T("Волна запомнила: нравится"));
   persist(); notify();
 }
 
@@ -759,7 +905,7 @@ function muteArtist(t) {
       return trackArtists(x).every(function (a) { return uris.indexOf(a) === -1; });
     });
   }
-  Spicetify.showNotification("Артист убран из волны");
+  Spicetify.showNotification(T("Артист убран из волны"));
   persist(); notify();
 }
 
@@ -786,7 +932,7 @@ function topArtists(limit) {
   return Object.keys(S.artists)
     .map(function (uri) {
       var a = S.artists[uri];
-      return { uri: uri, name: S.artistNames[uri] || names[uri] || "Артист", score: (a.completes || 0) + (a.likes || 0) - (a.skips || 0) };
+      return { uri: uri, name: S.artistNames[uri] || names[uri] || T("Артист"), score: (a.completes || 0) + (a.likes || 0) - (a.skips || 0) };
     })
     .sort(function (x, y) { return y.score - x.score; })
     .slice(0, limit || 6);
@@ -828,7 +974,7 @@ function computeStats() {
     byDay: byDay,
     byHour: byHour,
     avgBpm: avgBpm,
-    mood: avgBpm ? (avgBpm < 105 ? "спокойное" : avgBpm <= 135 ? "среднее" : "энергичное") : "—"
+    mood: avgBpm ? (avgBpm < 105 ? T("спокойное") : avgBpm <= 135 ? T("среднее") : T("энергичное")) : "—"
   };
 }
 
@@ -841,7 +987,7 @@ function statCard(label, value) {
 
 function StatsPanel(props) {
   var st = props.stats;
-  var days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  var days = [T("Пн"), T("Вт"), T("Ср"), T("Чт"), T("Пт"), T("Сб"), T("Вс")];
   var dayMax = Math.max.apply(null, st.byDay.concat([1]));
   var hourBuckets = [0, 1, 2, 3, 4, 5].map(function (i) {
     return st.byHour.slice(i * 4, i * 4 + 4).reduce(function (a, b) { return a + b; }, 0);
@@ -851,14 +997,14 @@ function StatsPanel(props) {
 
   return h("div", { className: "wave-stats" },
     h("div", { className: "wave-stat-cards" },
-      statCard("Прослушано", st.total),
-      statCard("Скипов", st.skips + " · " + st.skipRate + "%"),
-      statCard("Дослушано", st.finishRate + "%"),
-      statCard("Средний темп", (st.avgBpm ? st.avgBpm + " BPM" : "—") + (st.avgBpm ? " · " + st.mood : ""))
+      statCard(T("Прослушано"), st.total),
+      statCard(T("Скипов"), st.skips + " · " + st.skipRate + "%"),
+      statCard(T("Дослушано"), st.finishRate + "%"),
+      statCard(T("Средний темп"), (st.avgBpm ? st.avgBpm + " BPM" : "—") + (st.avgBpm ? " · " + st.mood : ""))
     ),
 
     h("div", { className: "wave-stat-block" },
-      h("h3", null, "По дням недели"),
+      h("h3", null, T("По дням недели")),
       h("div", { className: "wave-bars" },
         st.byDay.map(function (v, i) {
           return h("div", { className: "wave-bar", key: i, title: days[i] + ": " + v },
@@ -870,7 +1016,7 @@ function StatsPanel(props) {
     ),
 
     h("div", { className: "wave-stat-block" },
-      h("h3", null, "По часам"),
+      h("h3", null, T("По часам")),
       h("div", { className: "wave-bars" },
         hourBuckets.map(function (v, i) {
           return h("div", { className: "wave-bar", key: i, title: hourLabels[i] + ":00–" + (Number(hourLabels[i]) + 3) + ":59 · " + v },
@@ -882,7 +1028,7 @@ function StatsPanel(props) {
     ),
 
     h("div", { className: "wave-stat-block" },
-      h("h3", null, "Топ артистов"),
+      h("h3", null, T("Топ артистов")),
       st.artists.length
         ? h("ol", { className: "wave-top" }, st.artists.map(function (a) {
             return h("li", { key: a.uri },
@@ -890,7 +1036,7 @@ function StatsPanel(props) {
               h("span", { className: "wave-top-score" }, a.score)
             );
           }))
-        : h("div", { className: "wave-muted" }, "пока нет данных — послушай волну")
+        : h("div", { className: "wave-muted" }, T("пока нет данных — послушай волну"))
     )
   );
 }
@@ -923,10 +1069,10 @@ function TrackRow(props) {
     ),
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
-      h("button", { className: "wave-icon", title: "Нравится", onClick: function () { likeTrack(t); } }, icon("heart")),
-      h("button", { className: "wave-icon", title: "Убрать из волны", onClick: function () { dislikeTrack(t); } }, icon("close")),
-      h("button", { className: "wave-icon", title: "Больше не этот артист", onClick: function () { muteArtist(t); } }, icon("ban")),
-      h("button", { className: "wave-icon play", title: "Играть", onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
+      h("button", { className: "wave-icon", title: T("Нравится"), onClick: function () { likeTrack(t); } }, icon("heart")),
+      h("button", { className: "wave-icon", title: T("Убрать из волны"), onClick: function () { dislikeTrack(t); } }, icon("close")),
+      h("button", { className: "wave-icon", title: T("Больше не этот артист"), onClick: function () { muteArtist(t); } }, icon("ban")),
+      h("button", { className: "wave-icon play", title: T("Играть"), onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
     )
   );
 }
@@ -966,7 +1112,7 @@ function WaveApp() {
   var showStats = statsPair[0], setShowStats = statsPair[1];
 
   var likedUri = api.likedContext();
-  var allSources = [{ uri: likedUri, name: "Мой микс", icon: "\u2726" }].concat(
+  var allSources = [{ uri: likedUri, name: T("Мой микс"), icon: "\u2726" }].concat(
     playlists.list.map(function (p) { return { uri: p.uri, name: p.name, icon: "\u2261" }; })
   );
 
@@ -977,7 +1123,7 @@ function WaveApp() {
   function toggleSource(uri) {
     var idx = S.sources.indexOf(uri);
     if (idx >= 0) {
-      if (S.sources.length === 1) { Spicetify.showNotification("Оставь хотя бы один источник"); return; }
+      if (S.sources.length === 1) { Spicetify.showNotification(T("Оставь хотя бы один источник")); return; }
       S.sources.splice(idx, 1);
     } else {
       S.sources.push(uri);
@@ -987,16 +1133,17 @@ function WaveApp() {
 
   function setSetting(key, value) {
     S.settings[key] = value;
+    LANG_CACHE = null;
     persist(); notify();
   }
 
   function refreshKnown() {
-    setBusy("Обновляю список знакомого…");
+    setBusy(T("Обновляю список знакомого…"));
     api.known(true).then(function (k) {
       S.knownCount = k.count;
       persist(); notify();
       setBusy("");
-      Spicetify.showNotification("Знакомых треков: " + k.count);
+      Spicetify.showNotification(T("Знакомых треков: ") + k.count);
     }).catch(function (e) {
       setBusy("");
       setError(String((e && e.message) || e));
@@ -1005,7 +1152,7 @@ function WaveApp() {
 
   async function checkScrobble() {
     var token = (S.settings.scrobbleToken || "").trim();
-    if (!token) { setError("Укажи токен ListenBrainz"); return; }
+    if (!token) { setError(T("Укажи токен ListenBrainz")); return; }
     try {
       var r = await fetch("https://api.listenbrainz.org/1/validate-token", {
         headers: { Authorization: "Token " + token }
@@ -1014,32 +1161,32 @@ function WaveApp() {
       if (j && j.valid) {
         setError("");
         setSetting("scrobbleEnabled", true);
-        Spicetify.showNotification("ListenBrainz: " + (j.user_name || "токен принят"));
+        Spicetify.showNotification("ListenBrainz: " + (j.user_name || T("токен принят")));
       } else {
-        setError("ListenBrainz не принял токен");
+        setError(T("ListenBrainz не принял токен"));
       }
     } catch (e) {
-      setError("Не удалось проверить токен: сеть или CORS");
+      setError(T("Не удалось проверить токен: сеть или CORS"));
     }
   }
 
   async function run(sourcesOverride) {
     if (busy) return;
     setError("");
-    setBusy("Собираю рекомендации…");
+    setBusy(T("Собираю рекомендации…"));
     try {
       var sources = (sourcesOverride && sourcesOverride.length) ? sourcesOverride : selected;
       var opts = buildOpts();
       var tracks = await generate(sources, opts);
-      if (!tracks.length) throw new Error("Пустая волна. Попробуй другой источник.");
-      setBusy("Готовлю очередь…");
+      if (!tracks.length) throw new Error(T("Пустая волна. Попробуй другой источник."));
+      setBusy(T("Готовлю очередь…"));
       var liveUri = await api.livePlaylist(tracks);
       S.wave = { tracks: tracks, sources: sources.slice(), createdAt: now(), liveUri: liveUri };
       persist(); notify();
-      setBusy("Запускаю…");
+      setBusy(T("Запускаю…"));
       await api.playContext(liveUri);
       setBusy("");
-      Spicetify.showNotification("Волна собрана: " + tracks.length + " треков");
+      Spicetify.showNotification(T("Волна собрана: ") + tracks.length + T(" треков"));
     } catch (e) {
       console.error("[wave]", e);
       setError(String((e && e.message) || e));
@@ -1049,14 +1196,14 @@ function WaveApp() {
 
   async function more() {
     if (busy) return;
-    setBusy("Добавляю…");
+    setBusy(T("Добавляю…"));
     try {
       var opts = buildOpts(Math.max(10, Math.round(S.settings.length / 2)));
       var src = (S.wave && S.wave.sources && S.wave.sources.length) ? S.wave.sources : selected;
       var extra = await generate(src, opts);
-      if (!extra.length) throw new Error("Не удалось подобрать новые треки.");
+      if (!extra.length) throw new Error(T("Не удалось подобрать новые треки."));
       var all = (S.wave && S.wave.tracks ? S.wave.tracks : []).concat(extra);
-      setBusy("Продлеваю…");
+      setBusy(T("Продлеваю…"));
       var liveUri = await api.livePlaylist(all);
       S.wave = {
         tracks: all,
@@ -1087,7 +1234,7 @@ function WaveApp() {
   async function runSeed(seed) {
     if (busy) return;
     setError("");
-    setBusy("Готовлю волну…");
+    setBusy(T("Готовлю волну…"));
     try {
       var uris = [];
       var label = "";
@@ -1095,17 +1242,17 @@ function WaveApp() {
       if (seed.type === "artist") {
         var info = await api.artistTopTracks(seed.uri);
         uris = info.uris;
-        label = info.name ? "по артисту «" + info.name + "»" : "по артисту";
+        label = info.name ? T("по артисту «") + info.name + "»" : T("по артисту");
       } else {
         uris = [seed.uri];
         var meta = await api.trackInfo(seed.uri);
         if (meta) rememberMeta([{ uri: seed.uri, name: meta.name, artists: meta.artists }]);
-        label = meta && meta.name ? "по треку «" + meta.name + "»" : "по треку";
+        label = meta && meta.name ? T("по треку «") + meta.name + "»" : T("по треку");
       }
 
-      if (!uris.length) throw new Error("Не удалось найти треки для этой волны");
+      if (!uris.length) throw new Error(T("Не удалось найти треки для этой волны"));
 
-      setBusy("Собираю рекомендации…");
+      setBusy(T("Собираю рекомендации…"));
       var tempUri = await api.seedPlaylist(uris.map(function (u) { return { uri: u }; }));
 
       var opts = buildOpts();
@@ -1113,9 +1260,9 @@ function WaveApp() {
       opts.labels[tempUri] = label;
 
       var tracks = await generate([tempUri], opts);
-      if (!tracks.length) throw new Error("Не удалось собрать волну по этому seed");
+      if (!tracks.length) throw new Error(T("Не удалось собрать волну по этому seed"));
 
-      setBusy("Запускаю…");
+      setBusy(T("Запускаю…"));
       var liveUri = await api.livePlaylist(tracks);
       S.wave = {
         tracks: tracks,
@@ -1128,7 +1275,7 @@ function WaveApp() {
       };
       persist(); notify();
       await api.playContext(liveUri);
-      Spicetify.showNotification("Волна " + label);
+      Spicetify.showNotification(T("Волна ") + label);
       setBusy("");
     } catch (e) {
       console.error("[wave] seed", e);
@@ -1139,13 +1286,13 @@ function WaveApp() {
 
   async function save() {
     if (!S.wave || !S.wave.tracks.length) return;
-    setBusy("Сохраняю…");
+    setBusy(T("Сохраняю…"));
     try {
       var d = new Date();
-      var name = "Волна · " + d.getDate() + "." + (d.getMonth() + 1) + " " +
+      var name = SNAP_PREFIX + d.getDate() + "." + (d.getMonth() + 1) + " " +
         String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
       await api.createPlaylist(name, S.wave.tracks);
-      Spicetify.showNotification("Плейлист «" + name + "» готов — он уже на телефоне");
+      Spicetify.showNotification(T("Плейлист «") + name + T("» готов — он уже на телефоне"));
     } catch (e) {
       setError(String((e && e.message) || e));
     }
@@ -1185,16 +1332,16 @@ function WaveApp() {
       h("div", { className: "wave-header-cover", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} },
         heroCover ? null : h("span", { className: "wave-header-mark" }, "~")),
       h("div", { className: "wave-header-info" },
-        h("div", { className: "wave-header-type" }, "Радио"),
-        h("h1", { className: "wave-header-title" }, "Волна"),
+        h("div", { className: "wave-header-type" }, T("Радио")),
+        h("h1", { className: "wave-header-title" }, T("Волна")),
         h("div", { className: "wave-header-meta" },
           wave.length
             ? [
-                (S.wave && S.wave.seedLabel) ? "Волна " + S.wave.seedLabel : null,
-                wave.length + " треков",
+                (S.wave && S.wave.seedLabel) ? T("Волна ") + S.wave.seedLabel : null,
+                wave.length + T(" треков"),
                 totalDurationText(totalMs)
               ].filter(Boolean).join(" · ")
-            : "бесконечный поток по твоему вкусу"
+            : T("бесконечный поток по твоему вкусу")
         )
       )
     ),
@@ -1203,7 +1350,7 @@ function WaveApp() {
       h("button", {
         className: "wave-play-big",
         disabled: !!busy,
-        title: "Слушать",
+        title: T("Слушать"),
         onClick: function () {
           if (wave.length && S.wave && S.wave.liveUri) {
             api.playContext(S.wave.liveUri).catch(function () { run(); });
@@ -1214,26 +1361,26 @@ function WaveApp() {
       }, icon("play")),
 
       h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: function () { run(); } },
-        wave.length ? "Новая волна" : "Собрать волну"),
+        wave.length ? T("Новая волна") : T("Собрать волну")),
 
-      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: more }, "Продлить") : null,
-      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: save }, "Сохранить в плейлист") : null,
+      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: more }, T("Продлить")) : null,
+      wave.length ? h("button", { className: "wave-btn ghost", disabled: !!busy, onClick: save }, T("Сохранить в плейлист")) : null,
 
       busy ? h("span", { className: "wave-busy" }, busy) : null,
       h("span", { className: "wave-actions-spacer" }),
-      h("button", { className: "wave-icon-btn", title: "Настройки", onClick: function () { setShowAdvanced(!showAdvanced); } }, icon("gear"))
+      h("button", { className: "wave-icon-btn", title: T("Настройки"), onClick: function () { setShowAdvanced(!showAdvanced); } }, icon("gear"))
     ),
 
     error ? h("div", { className: "wave-error" }, error) : null,
 
     h("div", { className: "wave-section" },
       h("div", { className: "wave-section-head" },
-        h("h2", null, "Источники"),
+        h("h2", null, T("Источники")),
         h("div", { className: "wave-links" },
           h("button", { className: "wave-link", onClick: function () { setShowStats(!showStats); } },
-            showStats ? "Скрыть статистику" : "Статистика"),
+            showStats ? T("Скрыть статистику") : T("Статистика")),
           h("button", { className: "wave-link", onClick: function () { setShowAdvanced(!showAdvanced); } },
-            showAdvanced ? "Скрыть настройки" : "Настройки")
+            showAdvanced ? T("Скрыть настройки") : T("Настройки"))
         )
       ),
       h("div", { className: "wave-chips" },
@@ -1245,14 +1392,14 @@ function WaveApp() {
             onClick: function () { toggleSource(s.uri); }
           }, s.name);
         }),
-        playlists.loading ? h("span", { className: "wave-muted" }, "загружаю плейлисты…") : null
+        playlists.loading ? h("span", { className: "wave-muted" }, T("загружаю плейлисты…")) : null
       ),
-      h("div", { className: "wave-hint" }, "Выбери один плейлист — получишь волну в его настроении. Несколько — микс."),
+      h("div", { className: "wave-hint" }, T("Выбери один плейлист — получишь волну в его настроении. Несколько — микс.")),
 
       h("div", { className: "wave-mood" },
-        h("span", { className: "wave-mood-label" }, "Настроение"),
+        h("span", { className: "wave-mood-label" }, T("Настроение")),
         h("div", { className: "wave-chips" },
-          [["any", "Любое"], ["calm", "Спокойное"], ["mid", "Среднее"], ["energetic", "Энергичное"]].map(function (pair) {
+          [["any", T("Любое")], ["calm", T("Спокойное")], ["mid", T("Среднее")], ["energetic", T("Энергичное")]].map(function (pair) {
             var on = (S.settings.mood || "any") === pair[0];
             return h("button", {
               key: pair[0],
@@ -1264,17 +1411,29 @@ function WaveApp() {
       ),
 
       showAdvanced ? h("div", { className: "wave-settings" },
-        h(Slider, { label: "Новизна", value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }),
-        h(Slider, { label: "Разнообразие", value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }),
-        h(Slider, { label: "Длина", value: S.settings.length, min: 10, max: 60, step: 5, onChange: function (v) { setSetting("length", v); } }),
-        h(Slider, { label: "Эксперимент", value: S.settings.explore, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("explore", v); } }),
+        h(Slider, { label: T("Новизна"), value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }),
+        h(Slider, { label: T("Разнообразие"), value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }),
+        h(Slider, { label: T("Длина"), value: S.settings.length, min: 10, max: 60, step: 5, onChange: function (v) { setSetting("length", v); } }),
+        h(Slider, { label: T("Эксперимент"), value: S.settings.explore, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("explore", v); } }),
+        h("label", { className: "wave-slider" },
+          h("span", { className: "wave-slider-label" }, T("Язык")),
+          h("select", {
+            className: "wave-input wave-select",
+            value: S.settings.lang || "auto",
+            onChange: function (e) { setSetting("lang", e.target.value); }
+          },
+            h("option", { value: "auto" }, T("Авто")),
+            h("option", { value: "ru" }, "Русский"),
+            h("option", { value: "en" }, "English")
+          )
+        ),
         h("label", { className: "wave-toggle" },
           h("input", {
             type: "checkbox",
             checked: !!S.settings.onlyNew,
             onChange: function (e) { setSetting("onlyNew", e.target.checked); }
           }),
-          h("span", null, "Только новое — не брать треки из моих плейлистов и лайков")
+          h("span", null, T("Только новое — не брать треки из моих плейлистов и лайков"))
         ),
         h("label", { className: "wave-toggle" },
           h("input", {
@@ -1282,11 +1441,11 @@ function WaveApp() {
             checked: S.settings.autoExtend !== false,
             onChange: function (e) { setSetting("autoExtend", e.target.checked); }
           }),
-          h("span", null, "Автопродление — добирать треки, когда волна заканчивается")
+          h("span", null, T("Автопродление — добирать треки, когда волна заканчивается"))
         ),
         h("div", { className: "wave-known" },
-          h("span", null, S.knownCount ? "Исключаю знакомых треков: " + S.knownCount : "Список знакомых треков соберётся при первой генерации"),
-          h("button", { className: "wave-link", onClick: refreshKnown }, "обновить")
+          h("span", null, S.knownCount ? T("Исключаю знакомых треков: ") + S.knownCount : T("Список знакомых треков соберётся при первой генерации")),
+          h("button", { className: "wave-link", onClick: refreshKnown }, T("обновить"))
         ),
         h("div", { className: "wave-scrobble" },
           h("label", { className: "wave-toggle" },
@@ -1295,27 +1454,27 @@ function WaveApp() {
               checked: !!S.settings.scrobbleEnabled,
               onChange: function (e) { setSetting("scrobbleEnabled", e.target.checked); }
             }),
-            h("span", null, "Скробблить в ListenBrainz — история и рекомендации вне Spotify")
+            h("span", null, T("Скробблить в ListenBrainz — история и рекомендации вне Spotify"))
           ),
           h("div", { className: "wave-scrobble-row" },
             h("input", {
               className: "wave-input",
               type: "password",
-              placeholder: "токен ListenBrainz",
+              placeholder: T("токен ListenBrainz"),
               value: S.settings.scrobbleToken || "",
               onChange: function (e) { setSetting("scrobbleToken", e.target.value.trim()); }
             }),
-            h("button", { className: "wave-btn small", onClick: checkScrobble }, "Проверить")
+            h("button", { className: "wave-btn small", onClick: checkScrobble }, T("Проверить"))
           ),
-          h("div", { className: "wave-hint" }, "Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину.")
+          h("div", { className: "wave-hint" }, T("Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину."))
         )
       ) : null
     ),
 
     wave.length ? h("div", { className: "wave-section" },
       h("div", { className: "wave-section-head" },
-        h("h2", null, "Очередь волны"),
-        h("span", { className: "wave-muted" }, curUri ? "сейчас: " + (curItem.name || "") : "")
+        h("h2", null, T("Очередь волны")),
+        h("span", { className: "wave-muted" }, curUri ? T("сейчас: ") + (curItem.name || "") : "")
       ),
       h("div", { className: "wave-list" },
         wave.map(function (t, i) {
@@ -1323,15 +1482,15 @@ function WaveApp() {
         })
       )
     ) : h("div", { className: "wave-empty" },
-      h("h3", null, "Здесь появится волна"),
-      h("p", null, "Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.")
+      h("h3", null, T("Здесь появится волна")),
+      h("p", null, T("Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь."))
     ),
 
     showStats ? h(StatsPanel, { stats: computeStats() }) : null,
 
     h("div", { className: "wave-foot" },
-      h("span", null, "прослушано: " + st.plays + " · скипов: " + st.skips + " · артистов: " + st.artists),
-      h("span", { className: "wave-muted" }, "Волна учится на скипах и лайках")
+      h("span", null, T("прослушано: ") + st.plays + T(" · скипов: ") + st.skips + T(" · артистов: ") + st.artists),
+      h("span", { className: "wave-muted" }, T("Волна учится на скипах и лайках"))
     )
   );
 }

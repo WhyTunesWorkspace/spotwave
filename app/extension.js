@@ -63,6 +63,23 @@
     }
   }
 
+  function waveLanguage() {
+    try {
+      var st = JSON.parse(localStorage.getItem("wave.v1") || "{}");
+      var pref = (st.settings && st.settings.lang) || "auto";
+      if (pref === "ru" || pref === "en") return pref;
+    } catch (e) {}
+    try {
+      var loc = Spicetify.Locale && Spicetify.Locale.getLocale ? Spicetify.Locale.getLocale() : "";
+      if (loc) return /^ru/i.test(loc) ? "ru" : "en";
+    } catch (e) {}
+    return /^ru/i.test((typeof navigator !== "undefined" && navigator.language) || "en") ? "ru" : "en";
+  }
+
+  function tr(ru, en) {
+    return waveLanguage() === "ru" ? ru : en;
+  }
+
   function installMenu() {
     if (menuInstalled) return true;
     if (!window.Spicetify || !Spicetify.ContextMenu || !Spicetify.ContextMenu.Item) return false;
@@ -95,19 +112,19 @@
 
       var defs = [
         {
-          name: "Волна по плейлисту",
+          name: tr("Волна по плейлисту", "Wave from this playlist"),
           run: function (u) { setPending(u[0]); },
           ok: function (u) {
             return one(u, "spotify:playlist:") && String(u[0]).indexOf("spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ") !== 0;
           }
         },
         {
-          name: "Волна по этому треку",
+          name: tr("Волна по этому треку", "Wave from this track"),
           run: function (u) { setSeed("track", u[0]); },
           ok: function (u) { return one(u, "spotify:track:"); }
         },
         {
-          name: "Волна по исполнителю",
+          name: tr("Волна по исполнителю", "Wave by this artist"),
           run: function (u) { setSeed("artist", u[0]); },
           ok: function (u) { return one(u, "spotify:artist:"); }
         }

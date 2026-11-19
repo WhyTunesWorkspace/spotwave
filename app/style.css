@@ -316,6 +316,12 @@
 
 .wave-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.35); }
 
+.wave-select {
+  flex: 1 1 auto;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
 /* ---------------- track list ---------------- */
 
 .wave-list { margin-top: 6px; }
