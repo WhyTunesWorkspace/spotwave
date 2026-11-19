@@ -758,10 +758,113 @@ function topArtists(limit) {
   return Object.keys(S.artists)
     .map(function (uri) {
       var a = S.artists[uri];
-      return { uri: uri, name: names[uri] || uri.split(":").pop(), score: (a.completes || 0) + (a.likes || 0) - (a.skips || 0) };
+      return { uri: uri, name: S.artistNames[uri] || names[uri] || "Артист", score: (a.completes || 0) + (a.likes || 0) - (a.skips || 0) };
     })
     .sort(function (x, y) { return y.score - x.score; })
     .slice(0, limit || 6);
+}
+
+function computeStats() {
+  var recent = S.recent || [];
+  var total = recent.length;
+  var skips = 0;
+  var completes = 0;
+  var byDay = [0, 0, 0, 0, 0, 0, 0];
+  var byHour = new Array(24).fill(0);
+  var bpmSum = 0;
+  var bpmCount = 0;
+
+  recent.forEach(function (r) {
+    if (r.at) {
+      var d = new Date(r.at);
+      byDay[(d.getDay() + 6) % 7]++;
+      byHour[d.getHours()]++;
+    }
+    if (r.dur && r.played) {
+      if (r.played < Math.min(30000, r.dur * 0.45)) skips++;
+      else if (r.played >= r.dur * 0.8) completes++;
+    }
+    var b = S.bpm[r.uri];
+    if (typeof b === "number") { bpmSum += b; bpmCount++; }
+  });
+
+  var avgBpm = bpmCount ? Math.round(bpmSum / bpmCount) : 0;
+
+  return {
+    total: total,
+    skips: skips,
+    completes: completes,
+    skipRate: total ? Math.round((skips / total) * 100) : 0,
+    finishRate: total ? Math.round((completes / total) * 100) : 0,
+    artists: topArtists(5),
+    byDay: byDay,
+    byHour: byHour,
+    avgBpm: avgBpm,
+    mood: avgBpm ? (avgBpm < 105 ? "спокойное" : avgBpm <= 135 ? "среднее" : "энергичное") : "—"
+  };
+}
+
+function statCard(label, value) {
+  return h("div", { className: "wave-stat-card" },
+    h("div", { className: "wave-stat-value" }, value),
+    h("div", { className: "wave-stat-label" }, label)
+  );
+}
+
+function StatsPanel(props) {
+  var st = props.stats;
+  var days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  var dayMax = Math.max.apply(null, st.byDay.concat([1]));
+  var hourBuckets = [0, 1, 2, 3, 4, 5].map(function (i) {
+    return st.byHour.slice(i * 4, i * 4 + 4).reduce(function (a, b) { return a + b; }, 0);
+  });
+  var hourMax = Math.max.apply(null, hourBuckets.concat([1]));
+  var hourLabels = ["00", "04", "08", "12", "16", "20"];
+
+  return h("div", { className: "wave-stats" },
+    h("div", { className: "wave-stat-cards" },
+      statCard("Прослушано", st.total),
+      statCard("Скипов", st.skips + " · " + st.skipRate + "%"),
+      statCard("Дослушано", st.finishRate + "%"),
+      statCard("Средний темп", (st.avgBpm ? st.avgBpm + " BPM" : "—") + (st.avgBpm ? " · " + st.mood : ""))
+    ),
+
+    h("div", { className: "wave-stat-block" },
+      h("h3", null, "По дням недели"),
+      h("div", { className: "wave-bars" },
+        st.byDay.map(function (v, i) {
+          return h("div", { className: "wave-bar", key: i, title: days[i] + ": " + v },
+            h("div", { className: "wave-bar-fill", style: { height: Math.round((v / dayMax) * 100) + "%" } }),
+            h("span", { className: "wave-bar-label" }, days[i])
+          );
+        })
+      )
+    ),
+
+    h("div", { className: "wave-stat-block" },
+      h("h3", null, "По часам"),
+      h("div", { className: "wave-bars" },
+        hourBuckets.map(function (v, i) {
+          return h("div", { className: "wave-bar", key: i, title: hourLabels[i] + ":00–" + (Number(hourLabels[i]) + 3) + ":59 · " + v },
+            h("div", { className: "wave-bar-fill", style: { height: Math.round((v / hourMax) * 100) + "%" } }),
+            h("span", { className: "wave-bar-label" }, hourLabels[i])
+          );
+        })
+      )
+    ),
+
+    h("div", { className: "wave-stat-block" },
+      h("h3", null, "Топ артистов"),
+      st.artists.length
+        ? h("ol", { className: "wave-top" }, st.artists.map(function (a) {
+            return h("li", { key: a.uri },
+              h("span", { className: "wave-top-name" }, a.name),
+              h("span", { className: "wave-top-score" }, a.score)
+            );
+          }))
+        : h("div", { className: "wave-muted" }, "пока нет данных — послушай волну")
+    )
+  );
 }
 
 /* ------------------------------ ui bits ------------------------------ */
@@ -785,7 +888,10 @@ function TrackRow(props) {
     h(Cover, { src: art, className: "sm" }),
     h("div", { className: "wave-row-text" },
       h("div", { className: "wave-row-title", title: t.name }, t.name),
-      h("div", { className: "wave-row-sub", title: artists }, artists)
+      h("div", { className: "wave-row-sub", title: artists },
+        artists,
+        t.reason ? h("span", { className: "wave-row-reason" }, " · " + t.reason) : null
+      )
     ),
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
@@ -828,6 +934,8 @@ function WaveApp() {
   var error = errPair[0], setError = errPair[1];
   var advPair = React.useState(false);
   var showAdvanced = advPair[0], setShowAdvanced = advPair[1];
+  var statsPair = React.useState(false);
+  var showStats = statsPair[0], setShowStats = statsPair[1];
 
   var likedUri = api.likedContext();
   var allSources = [{ uri: likedUri, name: "Мой микс", icon: "\u2726" }].concat(
@@ -1050,8 +1158,12 @@ function WaveApp() {
     h("div", { className: "wave-section" },
       h("div", { className: "wave-section-head" },
         h("h2", null, "Источники"),
-        h("button", { className: "wave-link", onClick: function () { setShowAdvanced(!showAdvanced); } },
-          showAdvanced ? "Скрыть настройки" : "Настройки")
+        h("div", { className: "wave-links" },
+          h("button", { className: "wave-link", onClick: function () { setShowStats(!showStats); } },
+            showStats ? "Скрыть статистику" : "Статистика"),
+          h("button", { className: "wave-link", onClick: function () { setShowAdvanced(!showAdvanced); } },
+            showAdvanced ? "Скрыть настройки" : "Настройки")
+        )
       ),
       h("div", { className: "wave-chips" },
         allSources.map(function (s) {
@@ -1125,6 +1237,8 @@ function WaveApp() {
         h("p", null, "Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.")
       )
     ),
+
+    showStats ? h(StatsPanel, { stats: computeStats() }) : null,
 
     h("div", { className: "wave-foot" },
       h("span", null, "прослушано: " + st.plays + " · скипов: " + st.skips + " · артистов: " + st.artists),
