@@ -1,0 +1,13 @@
+{
+  "name": "spotwave",
+  "description": "Endless personal radio inside Spotify — waves from your liked songs, playlists, tracks, artists and albums. Skip learning, mood filters, no API keys.",
+  "authors": [
+    {
+      "name": "WhyTunesWorkspace",
+      "url": "https://github.com/WhyTunesWorkspace"
+    }
+  ],
+  "preview": "docs/marketplace-preview.png",
+  "readme": "README.md",
+  "tags": ["radio", "recommendations", "personalization", "playlists", "free"]
+}

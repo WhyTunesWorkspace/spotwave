@@ -8,8 +8,7 @@ session. No API keys, no OAuth apps, no Premium-only Web API.
 [![release](https://img.shields.io/github/v/release/WhyTunesWorkspace/spotwave?color=1ed760&label=release)](https://github.com/WhyTunesWorkspace/spotwave/releases)
 [![license](https://img.shields.io/github/license/WhyTunesWorkspace/spotwave?color=1ed760)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1ed760)](https://github.com/WhyTunesWorkspace/spotwave)
-[![license](https://img.shields.io/github/license/WhyTunesWorkspace/spotwave?color=1ed760)](LICENSE)
-[![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1ed760)](https://github.com/WhyTunesWorkspace/spotwave)
+[![marketplace](https://img.shields.io/badge/Spicetify-Marketplace-1ed760)](https://github.com/spicetify/marketplace)
 
 ![spotwave](docs/screenshot.png)
 
@@ -52,6 +51,11 @@ personal radio with skip learning.
   (Spotify and Spicetify live together fine: SpotX first, then Spicetify)
 
 ## Install
+
+### Spicetify Marketplace
+
+Open **Marketplace → Apps**, find **spotwave**, and open its card. Marketplace lists custom
+apps and links to their repo — apps are installed with the script below, not inside the card.
 
 ### Windows (one line)
 
