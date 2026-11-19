@@ -4,6 +4,8 @@
 Работает как приложение Spicetify, использует сессию самого клиента: никаких API-ключей,
 OAuth-приложений и Premium-API.
 
+> Репозиторий: **spotwave**. Внутри клиента приложение называется «Волна» — это одно и то же.
+
 > **Важно:** это клиентская модификация. Она не использует официальный Spotify Web API
 > (он закрыт для новых приложений с февраля 2026), а работает через внутренние механизмы
 > клиента, как это делает сам интерфейс Spotify. Использование — личное, некоммерческое.
@@ -46,7 +48,7 @@ OAuth-приложений и Premium-API.
 ### Вариант 1: скрипт (рекомендуется)
 
 ```powershell
-git clone https://github.com/WhyTunesWorkspace/wave.git
+git clone https://github.com/WhyTunesWorkspace/spotwave.git
 cd wave
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
