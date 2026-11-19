@@ -1,11 +1,11 @@
-# Project state (handoff)
+﻿# Project state (handoff)
 
 Updated: 2026-11-19
 
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.4.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.5.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 
@@ -14,7 +14,7 @@ Updated: 2026-11-19
 - Spicetify custom app (`app/`) + startup extension (`app/extension.js`).
 - Waves from: liked songs, playlists, track, artist, album.
 - Skip learning, "only new", BPM moods (calm/mid/energetic), auto-extend, reasons, stats.
-- Playback via a service playlist `Волна · Live` (native next/prev/shuffle/queue).
+- Playback via a service playlist `Р’РѕР»РЅР° В· Live` (native next/prev/shuffle/queue).
 - Export/import profile JSON; optional ListenBrainz scrobbling.
 - Bilingual UI (ru/en), native Spotify-style layout, brand identity (`docs/brand/`).
 - One-line installers (`scripts/install.ps1`, `scripts/install.sh`), package script, CI,
@@ -33,7 +33,7 @@ Research so far (from `spicetify/marketplace` source):
   (`raw.githubusercontent.com/<user>/<repo>/<branch>/manifest.json`).
 - Manifest schema (`src/logic/Schemas.ts`):
   `{ name, description, main?, usercss?, authors[], preview?, readme?, tags[], branch?, schemes?, include? }`.
-- Apps tab uses a specific topic — **still need to confirm** by grepping
+- Apps tab uses a specific topic вЂ” **still need to confirm** by grepping
   `src/components/Grid.tsx` around the `getTaggedRepos(` call (~line 379).
 - Our app manifest lives at `app/manifest.json`, so a **root `manifest.json`** is required,
   plus the repo topic. Need to know how the Apps installer downloads the app (repo archive vs
@@ -66,3 +66,4 @@ git tag vX.Y.Z; git push origin vX.Y.Z   # Actions builds the release
 - Read large files with offset/limit.
 - Avoid screenshots unless visual verification is required.
 - Prefer one apply/test cycle per batch of changes.
+
