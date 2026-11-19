@@ -246,6 +246,15 @@ spicetify restore
 
 ---
 
+## Бренд
+
+<img src="docs/brand/app-icon-512.png" width="64" align="right" alt="spotwave icon">
+
+Знак — **W, собранная из звуковой волны**: один штрих, три пика, два провала, читается в 24 px.
+Палитра: mint `#2BE5A6`, deep `#0E7A52`, ink `#08080A`, paper `#F2F2F2`, blood `#C1121F`.
+
+Ассеты и правила использования: [docs/brand/brand.md](docs/brand/brand.md).
+
 ## Лицензия
 
 MIT. См. [LICENSE](LICENSE).

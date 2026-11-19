@@ -20,6 +20,22 @@ function icon(name) {
   return h("span", { className: "wave-svg", dangerouslySetInnerHTML: { __html: ICONS[name] || "" } });
 }
 
+/* Логотип: W, собранная из звуковой волны. */
+function logoMark(size, className) {
+  return h("svg", {
+    className: className || "",
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2.4,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, h("path", { d: "M3 6.5L7.5 17.5L12 9L16.5 17.5L21 6.5" }));
+}
+
 var LS_KEY = "wave.v1";
 var HOUR = 3600000;
 var DAY = 86400000;
@@ -196,6 +212,9 @@ var I18N = {
     "Волна по плейлисту": "Wave from this playlist",
     "Волна по этому треку": "Wave from this track",
     "Волна по исполнителю": "Wave by this artist",
+    "Выбери источники — лайки или плейлисты": "Pick sources — liked songs or playlists",
+    "Собери волну кнопкой выше": "Build a wave with the button above",
+    "Скипай и лайкай — Волна подстроится": "Skip and like — Wave adapts",
     "Язык": "Language",
     "Авто": "Auto"
   }
@@ -356,6 +375,8 @@ function toSet(arr) {
 
 var KNOWN_CACHE = null;
 var KNOWN_TTL = 6 * HOUR;
+var PLAYLIST_CACHE = { at: 0, list: [] };
+var PLAYLIST_TTL = 60 * 1000;
 
 var api = {
   likedContext: function () {
@@ -363,12 +384,17 @@ var api = {
     catch (e) { return "spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ"; }
   },
 
-  allPlaylists: async function () {
+  allPlaylists: async function (force) {
+    if (!force && PLAYLIST_CACHE.list.length && now() - PLAYLIST_CACHE.at < PLAYLIST_TTL) {
+      return PLAYLIST_CACHE.list;
+    }
     var r = await PF.RootlistAPI.getContents();
     var items = (r && r.items) || [];
-    return items
+    var list = items
       .filter(function (i) { return i && i.type === "playlist" && i.uri && !i.isNotFound; })
       .map(function (i) { return { uri: i.uri, name: i.name || T("Плейлист") }; });
+    PLAYLIST_CACHE = { at: now(), list: list };
+    return list;
   },
 
   /* Для интерфейса: служебные плейлисты Волны не показываем как источники. */
@@ -625,6 +651,7 @@ function pickTracks(pool, opts) {
   var sorted = pool.slice().sort(function (a, b) { return b._score - a._score; });
   var out = [];
   var perArtist = {};
+  var perAlbum = {};
   var lastArtist = null;
 
   while (out.length < opts.length && sorted.length) {
@@ -636,7 +663,9 @@ function pickTracks(pool, opts) {
     for (var k = 0; k < tries; k++) {
       var cand = sorted[k];
       var key = primaryArtist(cand);
+      var albumKey = (cand.album && cand.album.uri) || "";
       if ((perArtist[key] || 0) >= opts.diversity) continue;
+      if (albumKey && (perAlbum[albumKey] || 0) >= 2) continue;
       if (key === lastArtist) continue;
       chosen = cand;
       chosenIdx = k;
@@ -648,6 +677,8 @@ function pickTracks(pool, opts) {
     out.push(chosen);
     var ck = primaryArtist(chosen);
     perArtist[ck] = (perArtist[ck] || 0) + 1;
+    var ak = (chosen.album && chosen.album.uri) || "";
+    if (ak) perAlbum[ak] = (perAlbum[ak] || 0) + 1;
     lastArtist = ck;
   }
 
@@ -1069,10 +1100,10 @@ function TrackRow(props) {
     ),
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
-      h("button", { className: "wave-icon", title: T("Нравится"), onClick: function () { likeTrack(t); } }, icon("heart")),
-      h("button", { className: "wave-icon", title: T("Убрать из волны"), onClick: function () { dislikeTrack(t); } }, icon("close")),
-      h("button", { className: "wave-icon", title: T("Больше не этот артист"), onClick: function () { muteArtist(t); } }, icon("ban")),
-      h("button", { className: "wave-icon play", title: T("Играть"), onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
+      h("button", { className: "wave-icon", title: T("Нравится"), "aria-label": T("Нравится"), onClick: function () { likeTrack(t); } }, icon("heart")),
+      h("button", { className: "wave-icon", title: T("Убрать из волны"), "aria-label": T("Убрать из волны"), onClick: function () { dislikeTrack(t); } }, icon("close")),
+      h("button", { className: "wave-icon", title: T("Больше не этот артист"), "aria-label": T("Больше не этот артист"), onClick: function () { muteArtist(t); } }, icon("ban")),
+      h("button", { className: "wave-icon play", title: T("Играть"), "aria-label": T("Играть"), onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
     )
   );
 }
@@ -1330,7 +1361,7 @@ function WaveApp() {
     h("header", { className: "wave-header" },
       h("div", { className: "wave-header-bg", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} }),
       h("div", { className: "wave-header-cover", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} },
-        heroCover ? null : h("span", { className: "wave-header-mark" }, "~")),
+        heroCover ? null : logoMark(64, "wave-header-mark")),
       h("div", { className: "wave-header-info" },
         h("div", { className: "wave-header-type" }, T("Радио")),
         h("h1", { className: "wave-header-title" }, T("Волна")),
@@ -1483,7 +1514,12 @@ function WaveApp() {
       )
     ) : h("div", { className: "wave-empty" },
       h("h3", null, T("Здесь появится волна")),
-      h("p", null, T("Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь."))
+      h("p", null, T("Нажми «Собрать волну» — Spotify подберёт треки по твоим лайкам и плейлистам, а Волна запомнит, что ты слушаешь и что пролистываешь.")),
+      h("ol", { className: "wave-steps" },
+        h("li", null, T("Выбери источники — лайки или плейлисты")),
+        h("li", null, T("Собери волну кнопкой выше")),
+        h("li", null, T("Скипай и лайкай — Волна подстроится"))
+      )
     ),
 
     showStats ? h(StatsPanel, { stats: computeStats() }) : null,

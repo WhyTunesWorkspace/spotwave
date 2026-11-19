@@ -8,6 +8,8 @@ session. No API keys, no OAuth apps, no Premium-only Web API.
 [![release](https://img.shields.io/github/v/release/WhyTunesWorkspace/spotwave?color=1ed760&label=release)](https://github.com/WhyTunesWorkspace/spotwave/releases)
 [![license](https://img.shields.io/github/license/WhyTunesWorkspace/spotwave?color=1ed760)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1ed760)](https://github.com/WhyTunesWorkspace/spotwave)
+[![license](https://img.shields.io/github/license/WhyTunesWorkspace/spotwave?color=1ed760)](LICENSE)
+[![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1ed760)](https://github.com/WhyTunesWorkspace/spotwave)
 
 ![spotwave](docs/screenshot.png)
 
@@ -173,6 +175,16 @@ App data: remove `wave.*` keys from localStorage (DevTools → Application).
 Issues and PRs are welcome. The app is plain ES5-ish JS without a build step —
 `node --check app/index.js` plus a manual run in the client is enough for most changes.
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Brand
+
+<img src="docs/brand/app-icon-512.png" width="64" align="right" alt="spotwave icon">
+
+The mark is a **W built from a waveform** — one stroke, three peaks, two valleys, still legible
+at 24 px. Palette: mint `#2BE5A6`, deep `#0E7A52`, ink `#08080A`, paper `#F2F2F2`,
+blood `#C1121F`.
+
+Assets, clear space and usage rules: [docs/brand/brand.md](docs/brand/brand.md).
 
 ## License
 

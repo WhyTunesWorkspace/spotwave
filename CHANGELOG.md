@@ -3,6 +3,23 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.3.0] — 2026-11-19
+
+Brand release: identity, native polish, smarter selection.
+
+### Added
+
+- **Brand identity**: the mark is a W built from a waveform. App icon (512 px), mono and mint
+  variants, brand guide with palette, clear space and usage rules (`docs/brand/`).
+- The app header uses the brand mark when there is no artwork yet.
+- **Onboarding steps** in the empty state: pick sources → build → skip/like.
+- Playlist list cache (60 s) — fewer client API calls per generation.
+
+### Changed
+
+- **Album diversity**: no more than two tracks from the same album in one wave.
+- Accessibility: action buttons now carry `aria-label`.
+
 ## [0.2.1] — 2026-11-19
 
 ### Fixed
