@@ -3,6 +3,21 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.5.1] — 2026-11-20
+
+### Added
+
+- **Spicetify Marketplace listing**: root `manifest.json` (no `main`/`usercss`), square
+  preview, repo topic `spicetify-apps`, install notes in both READMEs.
+- Fresh UI screenshot and a marketplace preview built from it.
+
+### Fixed
+
+- UI language right after a client restart: the locale is retried instead of caching the
+  fallback, so the app no longer starts in English on a Russian client.
+- Settings and Stats panels are mutually exclusive; settings render as a single list instead
+  of a grid that collapsed on narrow windows.
+
 ## [0.5.0] — 2026-11-19
 
 ### Added

@@ -5,7 +5,7 @@ Updated: 2026-11-19
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.5.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.5.1** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 
@@ -50,9 +50,10 @@ from the root Marketplace manifest.
 
 Next steps:
 
-1. Fresh screenshots (the current `docs/screenshot.png` shows the old heart cover, no sidebar).
+1. ~~Fresh screenshots~~ done in v0.5.1: `docs/screenshot.png` (English UI, My mix wave) and
+   `docs/marketplace-preview.png` (1200², ink + icon + wordmark + UI card).
 2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN).
-3. Pinned feedback issue.
+3. ~~Pinned feedback issue~~ created after the 0.5.1 release.
 4. Optional: scheduled morning wave, community mood presets.
 
 ## Commands

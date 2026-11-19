@@ -186,7 +186,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [x] Playlist / track / artist / album waves
 - [x] Skip learning, mood presets, auto-extend
 - [x] Bilingual UI, native redesign, brand identity
-- [ ] Spicetify Marketplace listing
+- [x] Spicetify Marketplace listing
 - [ ] Scheduled waves (morning mix)
 - [ ] Shared presets and community mood packs
 - [ ] Optional local server for generating from a phone
