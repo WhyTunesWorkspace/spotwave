@@ -23,29 +23,37 @@ Updated: 2026-11-19
   `docs/launch-ru.md`, `docs/launch-en.md`.
 - GitHub profile redesigned (manga B&W, no titles) + dark brand avatar uploaded.
 
-## Pending: Spicetify Marketplace
+## Spicetify Marketplace (done, 2026-11-19)
 
-Research so far (from `spicetify/marketplace` source):
+Verified against `spicetify/marketplace` source (`9970452`, 2026-11-16):
 
-- The Marketplace discovers items by **GitHub topic** (`getTaggedRepos(topic)`), not by a
-  curated list.
-- For each repo it fetches **`manifest.json` from the repository root**
-  (`raw.githubusercontent.com/<user>/<repo>/<branch>/manifest.json`).
-- Manifest schema (`src/logic/Schemas.ts`):
-  `{ name, description, main?, usercss?, authors[], preview?, readme?, tags[], branch?, schemes?, include? }`.
-- Apps tab uses a specific topic вЂ” **still need to confirm** by grepping
-  `src/components/Grid.tsx` around the `getTaggedRepos(` call (~line 379).
-- Our app manifest lives at `app/manifest.json`, so a **root `manifest.json`** is required,
-  plus the repo topic. Need to know how the Apps installer downloads the app (repo archive vs
-  `main` path) before adding it.
+- Apps are discovered via GitHub search `topic:spicetify-apps` (`Grid.tsx:318`).
+- The manifest is fetched from the **repo root** (`FetchRemotes.ts:143`).
+- `fetchAppManifest` accepts a manifest only if it has `name` + `description` and **no `main`
+  and no `usercss`** — otherwise it is classified as an extension/theme.
+- Marketplace does **not** install apps: the card opens the repo (`Card.tsx:195`). Install
+  stays with our one-line scripts.
+- Blacklist (`resources/blacklist.json`) does not include spotwave.
+
+Shipped in `2c9a16d`:
+
+- Root `manifest.json` (`name`, `description`, `preview`, `readme`, `authors`, `tags`,
+  no `main`/`usercss`).
+- `docs/marketplace-preview.png` (1024², ink + icon + wordmark; square because cards are 1:1).
+- Topic `spicetify-apps` added (existing topics kept).
+- README/README.ru: Marketplace install section; duplicate badges removed.
+
+Verified after push: raw manifest 200, preview 200, `search/repositories?q=topic:spicetify-apps+user:WhyTunesWorkspace` → 1.
+
+Note: `app/manifest.json` is the Spicetify runtime manifest (with `main`) and must stay separate
+from the root Marketplace manifest.
 
 Next steps:
 
-1. Confirm the Apps topic and install mechanism.
-2. Add root `manifest.json` with `name`, `description`, `preview`, `authors`, `tags`.
-3. Add the repo topic; verify it appears in Marketplace.
-4. Post launch article (`docs/launch-ru.md`) and Show HN (`docs/launch-en.md`).
-5. Optional: scheduled morning wave, community mood presets.
+1. Fresh screenshots (the current `docs/screenshot.png` shows the old heart cover, no sidebar).
+2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN).
+3. Pinned feedback issue.
+4. Optional: scheduled morning wave, community mood presets.
 
 ## Commands
 

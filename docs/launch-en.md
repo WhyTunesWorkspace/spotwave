@@ -40,6 +40,9 @@ Install (Spotify desktop + Spicetify required):
 iwr -useb https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scripts/install.ps1 | iex
 ```
 
+Also listed in **Spicetify Marketplace → Apps** (the card links here; the installer above is
+still the install step).
+
 Repo: https://github.com/WhyTunesWorkspace/spotwave (MIT)
 
 Happy to answer questions about the internal APIs, the ranking, or the packaging. Feedback on
@@ -55,23 +58,26 @@ native controls work. RU/EN, MIT.
 
 → https://github.com/WhyTunesWorkspace/spotwave
 
-## Spicetify Marketplace submission notes
+## Spicetify Marketplace listing (live)
 
-Prepared package: `dist/spotwave.zip` from `scripts/package.ps1` (contains `app/`, `scripts/`,
-README, LICENSE, CHANGELOG).
+Listed since 2026-11-19. How it works, verified in the Marketplace source:
 
-Before submitting:
+- Discovery: GitHub topic `spicetify-apps`.
+- Metadata: root `manifest.json` with `name`, `description`, `preview`, `readme`, `authors`,
+  `tags` — and deliberately **no `main`/`usercss`**, which would reclassify it as an
+  extension/theme.
+- The card links to this repo; Marketplace does not install custom apps itself. The repo's
+  one-line installer is the install path.
 
-1. Confirm `manifest.json` has a name, icon, and version.
-2. Include a short description (one sentence) and 1–2 screenshots (`docs/screenshot.png`).
-3. Note that the app requires no external credentials and sends no telemetry.
-4. If the marketplace requires a PR with a metadata entry, add the repository URL and the
-   latest release asset, not a branch archive.
+When updating the card: edit the root `manifest.json` or replace
+`docs/marketplace-preview.png` and push to `main`. GitHub's topic search and the raw CDN each
+cache for a few minutes.
 
 ## Posting checklist
 
-- [ ] Release is published and the one-line installer works from a clean machine.
-- [ ] README has the screenshot above the fold.
+- [x] Release is published (v0.5.0) and the one-line installer works from a clean machine.
+- [x] Marketplace listing is live (`topic:spicetify-apps`, root manifest).
+- [ ] README has a fresh screenshot above the fold.
 - [ ] A pinned issue collects feedback.
 - [ ] Cross-post to the Spicetify Discord and the Russian-speaking Spotify community.
 - [ ] Reply to every bug report in the first 48 hours — that is what turns a launch into a

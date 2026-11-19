@@ -89,6 +89,9 @@ iwr -useb https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scri
 curl -fsSL https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scripts/install.sh | bash
 ```
 
+Либо через **Spicetify Marketplace → Apps**: найдите spotwave в каталоге (карточка ведёт
+в репозиторий) и установите тем же скриптом выше.
+
 После установки в левом верхнем углу Spotify появляется иконка с волной.
 
 Репозиторий: https://github.com/WhyTunesWorkspace/spotwave
@@ -104,7 +107,6 @@ curl -fsSL https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scr
 
 ## Что дальше
 
-- Листинг в Spicetify Marketplace.
 - Утренние волны по расписанию.
 - Общие пресеты настроений.
 - Опциональный локальный сервер, чтобы собирать волну с телефона.
