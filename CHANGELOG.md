@@ -1,7 +1,14 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
+
+## [0.5.0] — 2026-11-19
+
+### Added
+
+- **Queue filter**: narrow the wave by track title or artist.
+- `docs/STATE.md`: a short handoff describing the project state and pending work.
 
 ## [0.4.0] — 2026-11-19
 
@@ -92,5 +99,9 @@ First working MVP.
 - Save wave as a playlist.
 - "Only new" filter and live playlist playback.
 
+[0.5.0]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.5.0
+[0.4.0]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.4.0
+[0.3.0]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.3.0
+[0.2.1]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.2.1
 [0.2.0]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.2.0
 [0.1.0]: https://github.com/WhyTunesWorkspace/spotwave/releases/tag/v0.1.0

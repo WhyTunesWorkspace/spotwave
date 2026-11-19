@@ -224,6 +224,8 @@ var I18N = {
     "Данные импортированы": "Data imported",
     "Не удалось прочитать файл": "Could not read the file",
     "Темп": "Tempo",
+    "Фильтр: название или артист": "Filter: title or artist",
+    "Ничего не найдено": "Nothing found",
     "Язык": "Language",
     "Авто": "Auto"
   }
@@ -1170,6 +1172,8 @@ function WaveApp() {
   var showAdvanced = advPair[0], setShowAdvanced = advPair[1];
   var statsPair = React.useState(false);
   var showStats = statsPair[0], setShowStats = statsPair[1];
+  var filterPair = React.useState("");
+  var filter = filterPair[0], setFilter = filterPair[1];
 
   var likedUri = api.likedContext();
   var allSources = [{ uri: likedUri, name: T("Мой микс"), icon: "\u2726" }].concat(
@@ -1429,6 +1433,11 @@ function WaveApp() {
   var curUri = curItem && curItem.uri;
   var st = stats();
   var wave = S.wave && S.wave.tracks ? S.wave.tracks : [];
+  var q = filter.trim().toLowerCase();
+  var visible = q ? wave.filter(function (t) {
+    var hay = (t.name || "") + " " + (t.artists || []).map(function (a) { return a.name; }).join(" ");
+    return hay.toLowerCase().indexOf(q) >= 0;
+  }) : wave;
   var totalMs = wave.reduce(function (a, t) { return a + (t.durationMs || 0); }, 0);
   var heroCover = wave.length && wave[0].album ? wave[0].album.image : (curItem && curItem.album && curItem.album.images && curItem.album.images[0] ? curItem.album.images[0].url : "");
 
@@ -1598,12 +1607,20 @@ function WaveApp() {
     wave.length ? h("div", { className: "wave-section" },
       h("div", { className: "wave-section-head" },
         h("h2", null, T("Очередь волны")),
-        h("span", { className: "wave-muted" }, curUri ? T("сейчас: ") + (curItem.name || "") : "")
+        h("div", { className: "wave-head-right" },
+          h("input", {
+            className: "wave-input wave-filter",
+            placeholder: T("Фильтр: название или артист"),
+            value: filter,
+            onChange: function (e) { setFilter(e.target.value); }
+          }),
+          h("span", { className: "wave-muted" }, curUri ? T("сейчас: ") + (curItem.name || "") : "")
+        )
       ),
       h("div", { className: "wave-list" },
-        wave.map(function (t, i) {
+        visible.length ? visible.map(function (t, i) {
           return h(TrackRow, { key: t.uri + i, track: t, index: i, current: curUri === t.uri, onPlay: playTrack });
-        })
+        }) : h("div", { className: "wave-muted wave-nothing" }, T("Ничего не найдено"))
       )
     ) : h("div", { className: "wave-empty" },
       h("h3", null, T("Здесь появится волна")),

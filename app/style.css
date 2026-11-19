@@ -173,6 +173,23 @@
 
 .wave-links { display: flex; gap: 18px; }
 
+.wave-head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.wave-filter {
+  max-width: 260px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+}
+
+.wave-nothing { padding: 20px 16px; }
+
 .wave-link {
   background: none;
   border: none;
