@@ -8,3 +8,5 @@ backup/
 # системное
 .DS_Store
 Thumbs.db
+
+dist/

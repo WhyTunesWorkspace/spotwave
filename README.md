@@ -1,251 +1,183 @@
-# Волна
+# spotwave
 
-Персональное бесконечное радио внутри Spotify — замена «Моей волны» из Яндекс.Музыки.
-Работает как приложение Spicetify, использует сессию самого клиента: никаких API-ключей,
-OAuth-приложений и Premium-API.
+**Endless personal radio inside Spotify — a replacement for Yandex Music's “My Wave”.**
 
-> Репозиторий: **spotwave**. Внутри клиента приложение называется «Волна» — это одно и то же.
+Runs as a [Spicetify](https://spicetify.app) custom app and uses the Spotify client's own
+session. No API keys, no OAuth apps, no Premium-only Web API.
 
-> **Важно:** это клиентская модификация. Она не использует официальный Spotify Web API
-> (он закрыт для новых приложений с февраля 2026), а работает через внутренние механизмы
-> клиента, как это делает сам интерфейс Spotify. Использование — личное, некоммерческое.
+[![release](https://img.shields.io/github/v/release/WhyTunesWorkspace/spotwave?color=1ed760&label=release)](https://github.com/WhyTunesWorkspace/spotwave/releases)
+[![license](https://img.shields.io/github/license/WhyTunesWorkspace/spotwave?color=1ed760)](LICENSE)
+[![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1ed760)](https://github.com/WhyTunesWorkspace/spotwave)
+
+![spotwave](docs/screenshot.png)
+
+> **Русская версия:** [README.ru.md](README.ru.md)
 
 ---
 
-## Что умеет
+## Why
 
-| Возможность | Описание |
+Spotify's own **daylist** ignores most of what you actually listen to, and the Web API has been
+closed to new apps since February 2026 (Premium required for the app owner, extended quota for
+companies only). So spotwave talks to the same internal endpoints the Spotify UI already uses —
+playlist recommendations, GraphQL metadata, BPM/key decoration — and turns them into a proper
+personal radio with skip learning.
+
+## Features
+
+| | |
 |---|---|
-| **Мой микс** | волна на основе лайкнутых треков |
-| **Волна по плейлистам** | один или несколько своих плейлистов как источник настроения |
-| **Волна по треку / исполнителю** | правый клик по треку или артисту → волна в его духе |
-| **Только новое** | исключает треки из лайков, плейлистов и недавно игравшего |
-| **Настроения** | спокойное / среднее / энергичное — по BPM треков |
-| **Автопродление** | волна сама добирает треки, когда очередь подходит к концу |
-| **Обучение на скипах** | фоновый трекер пишет дослушивания и скипы, даже когда вкладка закрыта |
-| **Ручной фидбек** | ♥ нравится (в Liked Songs), ✕ скрыть трек, ⊘ скрыть артиста |
-| **Причина выбора** | у каждого трека видно, из какого источника он пришёл |
-| **Статистика** | прослушивания, скипы, топ-артисты, распределение по дням и часам, средний BPM |
-| **Скробблинг** | экспорт прослушиваний в ListenBrainz (опционально) |
-| **Экспорт** | «В плейлист» создаёт снимок волны — он сразу доступен на телефоне |
+| **My mix** | a wave built from your liked songs |
+| **Playlist waves** | pick one playlist for its mood, or several for a mix |
+| **Track / artist waves** | right-click a track or an artist → wave in its spirit |
+| **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
+| **Mood presets** | Calm / Mid / Energetic, filtered by BPM |
+| **Auto-extend** | adds more tracks as the wave runs out |
+| **Skip learning** | a background extension records plays and skips even when the tab is closed |
+| **Manual feedback** | like (adds to Liked Songs), hide track for 45 days, mute artist |
+| **Pick reason** | every track shows where it came from |
+| **Stats** | plays, skips, completion, top artists, weekday/hour distribution, average tempo |
+| **Scrobbling** | optional ListenBrainz export |
+| **Playlist export** | “Save to playlist” creates a snapshot that syncs to your phone |
 
----
+## Requirements
 
-## Требования
-
-- Windows 10/11
-- Spotify для Windows (desktop-версия, не Microsoft Store)
-- [SpotX](https://github.com/SpotX-Official/SpotX) — опционально, но рекомендуется для free-аккаунтов
+- Spotify desktop (not the Microsoft Store build)
 - [Spicetify CLI](https://spicetify.app) ≥ 2.40
-- PowerShell 5.1+
+- Windows 10/11, macOS or Linux
+- [SpotX](https://github.com/SpotX-Official/SpotX) is optional but recommended on free accounts
+  (Spotify and Spicetify live together fine: SpotX first, then Spicetify)
 
-> Spicetify и SpotX совместимы: сначала SpotX, затем Spicetify. Порядок важен.
+## Install
 
----
-
-## Установка
-
-### Вариант 1: скрипт (рекомендуется)
+### Windows (one line)
 
 ```powershell
+iwr -useb https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scripts/install.ps1 | iex
+```
+
+The script finds Spotify and Spicetify, copies the app, sets `custom_apps = wave`, backs up
+`xpui.spa` and applies the patch. Run PowerShell as your normal user (not elevated) to avoid a
+black window.
+
+### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scripts/install.sh | bash
+```
+
+### From source
+
+```bash
 git clone https://github.com/WhyTunesWorkspace/spotwave.git
-cd wave
+cd spotwave
+# Windows
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+# macOS / Linux
+bash scripts/install.sh
 ```
 
-Скрипт:
-1. находит Spotify и Spicetify;
-2. копирует приложение в `%APPDATA%\spicetify\CustomApps\wave`;
-3. прописывает `custom_apps = wave` в конфиг Spicetify;
-4. закрывает Spotify, делает `spicetify backup apply` и запускает клиент.
+### First run
 
-Если скрипт запущен от администратора, он автоматически добавит `--bypass-admin`
-(иначе Spotify может показать чёрное окно).
+1. Open Spotify → a **round wave icon** appears in the top-left corner (next to back/forward).
+2. Open it, pick sources, hit **Build wave**.
+3. The first run takes a few seconds while spotwave collects your known tracks.
 
-### Вариант 2: вручную
+The app UI is available in **Russian and English** (auto-detected from the client locale,
+switchable in Settings).
 
-```powershell
-# 1. Установить Spicetify (если ещё нет)
-iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex
+## Usage
 
-# 2. Скопировать приложение
-mkdir "$env:APPDATA\spicetify\CustomApps\wave"
-copy .\app\* "$env:APPDATA\spicetify\CustomApps\wave\" -Recurse
+### Sources
 
-# 3. Настроить и применить
-spicetify config spotify_path "$env:APPDATA\Spotify"
-spicetify config prefs_path "$env:APPDATA\Spotify\prefs"
-spicetify config custom_apps wave
-# закрыть Spotify, затем:
-spicetify backup apply
-```
+- **My mix** — Spotify recommendations seeded by your liked songs.
+- **Playlists** — select one or several; the recommendation engine follows their mood.
+- **Right-click a playlist → “Wave from this playlist”**.
+- **Right-click a track → “Wave from this track”**, **right-click an artist → “Wave by this artist”**.
+  A temporary `Волна · Seed` playlist is filled with the seed tracks and reused on the next seed.
 
-### Первый запуск
+### Settings
 
-1. Открой Spotify → в левом верхнем углу появится **круглая иконка с волной** (подсказка «Волна»).
-2. Открой её, выбери источники и нажми **«Собрать волну»**.
-3. Первая генерация может занять 5–15 секунд: приложение собирает список знакомых треков.
-
----
-
-## Как пользоваться
-
-### Источники
-
-- **Мой микс** — рекомендации Spotify от твоих лайков.
-- **Плейлисты** — выбери один (волна в его настроении) или несколько (микс).
-- **ПКМ по плейлисту → «Волна по плейлисту»** — то же самое в один клик.
-- **ПКМ по треку → «Волна по этому треку»**, **ПКМ по артисту → «Волна по исполнителю»** —
-  создаётся временный seed-плейлист, по нему генерируется волна, после чего он удаляется.
-
-### Настройки
-
-| Параметр | Что делает |
+| Setting | What it does |
 |---|---|
-| Новизна | насколько охотно брать незнакомых артистов |
-| Разнообразие | максимум треков одного артиста в волне |
-| Длина | сколько треков генерировать за раз |
-| Эксперимент | доля случайности при выборе |
-| Только новое | исключать лайки, плейлисты и недавно игравшее |
-| Настроение | фильтр по BPM: спокойное / среднее / энергичное / любое |
-| Автопродление | добирать треки, когда до конца волны остаётся 2–3 трека |
+| Novelty | how willingly unknown artists are picked |
+| Diversity | max tracks per artist in one wave |
+| Length | tracks generated per run |
+| Exploration | amount of randomness |
+| Only new | exclude liked/playlists/recently played |
+| Mood | BPM filter: calm / mid / energetic / any |
+| Auto-extend | top up the queue when the wave ends |
+| Language | auto / Russian / English |
 
-### Воспроизведение
+### Playback
 
-Волна складывается в служебный плейлист **«Волна · Live»** и играется как контекст.
-Благодаря этому штатные кнопки ⏭/⏮, очередь и шаффл работают как в обычном плейлисте.
-Плейлист виден в медиатеке и доступен с телефона.
+The wave is written into a service playlist **`Волна · Live`** and played as a playlist context —
+so native ⏭/⏮, the queue and shuffle all work. The playlist is visible in your library and on
+your phone.
 
-Когда до конца волны остаётся 3–4 трека, **автопродление** само добирает следующую
-порцию и подкидывает её в очередь — музыка не останавливается.
-
-### Скробблинг в ListenBrainz
-
-1. Зарегистрируйся на [listenbrainz.org](https://listenbrainz.org) и открой
-   **Settings → API token**, скопируй токен.
-2. В Волне: **Настройки** (шестерёнка справа) → включи «Скробблить в ListenBrainz»,
-   вставь токен, нажми «Проверить».
-3. Дальше всё автоматически: треки, дослушанные хотя бы наполовину (или 4 минуты),
-   уходят в ListenBrainz.
-
-Это даёт независимую от Spotify историю прослушивания и основу для более глубоких
-рекомендаций в будущем.
-
----
-
-## Как это работает
-
-### Архитектура
+## How it works
 
 ```
 app/
-  index.js       UI (React через Spicetify) + движок рекомендаций
-  extension.js   фоновый трекер + пункты контекстного меню (грузится при старте Spotify)
-  style.css      стили
-  manifest.json  манифест custom app
+  index.js       UI (React via Spicetify) + recommendation engine
+  extension.js   background tracker, context-menu items, scrobbling
+  style.css
+  manifest.json
 ```
 
-- **index.js** — вкладка приложения. Рендерит интерфейс, собирает источники, считает
-  кандидатов, пишет плейлист и запускает воспроизведение.
-- **extension.js** — расширение Spicetify. Работает всегда, пока открыт клиент:
-  слушает `songchange`/`onprogress`, копит события в `localStorage` и регистрирует
-  пункты контекстного меню.
+- **Candidates** — `PlaylistAPI.getRecommendedTracks(contextUri, skipIds, limit, {decorateWithBpmAndKey:true})`,
+  the same engine Spotify uses for playlist enhancements. Liked songs act as a playlist context.
+  The client returns **BPM and key** along with tracks, which replaces the closed audio features.
+- **Filters** — bans, “only new”, mood BPM range, long tracks, slowed/remix/karaoke.
+- **Ranking** — artist affinity (completions + likes − skips) × freshness × novelty + exploration noise.
+- **Selection** — greedy pick with a per-artist cap and no back-to-back repeats.
+- **Reason** — each track keeps its source (`from «Melancholy»`, `from your liked songs`, …).
+- **Playback** — rewrite `Волна · Live`, then `playUri` as a context.
+- **Auto-extend** — when 3–4 tracks remain, generate more, update the playlist, enqueue the rest.
 
-### Данные
+State lives in `localStorage`: `wave.v1` (settings, profile, history), `wave.events` (raw plays),
+`wave.known.v2` (known-track cache, 6 h TTL).
 
-| Ключ localStorage | Содержимое |
+## Troubleshooting
+
+| Symptom | Fix |
 |---|---|
-| `wave.v1` | настройки, профиль артистов, статистика треков, текущая волна, история |
-| `wave.events` | сырые события прослушивания от extension |
-| `wave.known.v2` | кэш «знакомых» треков (лайки + плейлисты + недавнее), TTL 6 ч |
-| `wave.scrobble.v1` | очередь скробблинга ListenBrainz |
+| No wave icon | run `spicetify apply` with Spotify closed; check `custom_apps = wave` |
+| Black window after patching | don't run Spicetify as administrator (or use `--bypass-admin` if you must) |
+| Empty wave | turn off “Only new”, add playlists, check your connection |
+| Next/prev does nothing | make sure `Волна · Live` is the playing context |
+| Everything broke after a Spotify update | `spicetify restore`, then run the installer again |
 
-### Алгоритм
+Logs: `Ctrl+Shift+I` → Console, filter `[wave]`.
 
-1. **Профиль.** Аффинити артиста = дослушивания + лайки − скипы, с затуханием по времени.
-2. **Кандидаты.** `PlaylistAPI.getRecommendedTracks(contextUri, skipIds, limit, {decorateWithBpmAndKey:true})` —
-   тот же движок рекомендаций, что использует сам Spotify для «Enhance» и похожих треков.
-   Работает по контексту плейлиста; лайки выступают в роли служебного плейлиста.
-   Вместе с треками клиент отдаёт **BPM и тональность** — это замена закрытым audio features.
-3. **Фильтры.** Баны, «только новое» (URI + нормализованные «название+артист»),
-   BPM-диапазон настроения, длинные треки, slowed/remix/karaoke.
-4. **Ранжирование.** Аффинити × свежесть × новизна + случайный шум (эксперимент).
-5. **Выбор.** Жадный отбор с ограничением «не больше N треков одного артиста» и
-   без двух подряд.
-6. **Причина.** Каждому треку присваивается источник (`из «Меланхолии»`, `из твоих лайков`,
-   `по артисту «X»`), он хранится вместе с волной и показывается в списке.
-7. **Воспроизведение.** Перезапись «Волна · Live» и `playUri` как контекста.
-8. **Автопродление.** При приближении к концу волны генерируется ещё порция,
-   обновляется «Волна · Live», а новые треки добавляются в очередь клиента.
+## Limitations
 
-### Seed-волны
+- No Spotify audio features (closed); “energy” is approximated by BPM.
+- Recommendations work by playlist context; track/artist seeds use a temporary playlist.
+- Scrobbling supports ListenBrainz (Last.fm needs a separate OAuth session).
+- A client modification can break after major Spotify updates.
 
-Для «Волны по треку» и «Волны по исполнителю» создаётся служебный плейлист
-**«Волна · Seed»**: в него кладутся 1 трек (для трека) или до 10 топ-треков артиста
-(через GraphQL `queryArtistOverview`), после чего по нему генерируется волна.
-Плейлист не удаляется, а перезаписывается при следующем seed — так автопродление
-всегда имеет живой источник.
-
-### Почему не Web API
-
-С февраля 2026 Spotify требует Premium у владельца любого приложения в development mode,
-а extended quota выдаёт только юрлицам. Публичный OAuth-путь для личного проекта закрыт.
-Поэтому Волна работает через клиентскую сессию — ровно так же, как интерфейс Spotify.
-
----
-
-## Обновление
+## Uninstall
 
 ```powershell
-git pull
-powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
-```
-
-Или: `update.cmd` (копирует `app\*` и делает `spicetify apply`).
-
-После крупных обновлений Spotify приложение может потребовать правок — внутренние
-методы клиента меняются. Проверяй `spicetify-routes-wave.js` в `%APPDATA%\Spotify\Apps\xpui`.
-
----
-
-## Диагностика
-
-| Симптом | Что делать |
-|---|---|
-| Нет иконки «Волна» | `spicetify apply` при закрытом Spotify; проверь `custom_apps = wave` |
-| Чёрное окно после патча | запускай Spicetify без прав администратора (или с `--bypass-admin` при необходимости) |
-| Пустая волна | отключи «Только новое», добавь плейлисты, проверь интернет |
-| Не работает следующий трек | убедись, что играет «Волна · Live», а не одиночный трек |
-| Ошибка `Resolver not found` | это внутренний API клиента; перезапусти Spotify |
-| После обновления Spotify всё сломалось | `spicetify restore`, затем `install.ps1` заново |
-
-Логи: `Ctrl+Shift+I` в Spotify (DevTools) → Console, фильтр `[wave]`.
-
----
-
-## Удаление
-
-```powershell
-spicetify config custom_apps ""   # убрать приложение
-spicetify apply                    # перепатчить клиент
-# полный откат Spicetify:
+spicetify config custom_apps ""
+spicetify apply
+# full Spicetify rollback:
 spicetify restore
 ```
 
-Данные приложения: удалить ключи `wave.*` в localStorage (DevTools → Application).
+App data: remove `wave.*` keys from localStorage (DevTools → Application).
 
----
+## Contributing
 
-## Ограничения
+Issues and PRs are welcome. The app is plain ES5-ish JS without a build step —
+`node --check app/index.js` plus a manual run in the client is enough for most changes.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- Нет Spotify Audio Features (закрыты), поэтому «энергия» считается по BPM,
-  который клиент отдаёт вместе с рекомендациями.
-- Рекомендации работают по контексту плейлиста; для seed-волн создаётся временный плейлист.
-- Скробблинг поддерживает ListenBrainz (Last.fm требует отдельной OAuth-сессии).
-- Это модификация клиента: она может ломаться после обновлений Spotify.
+## License
 
----
+MIT — see [LICENSE](LICENSE).
 
-## Лицензия
-
-MIT. См. [LICENSE](LICENSE).
+> Personal, non-commercial project. It uses your own client session only and sends nothing
+> anywhere except the optional ListenBrainz scrobbles. Note that Spicetify and SpotX are
+> third-party client modifications and formally diverge from Spotify's ToS.
