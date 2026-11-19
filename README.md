@@ -31,7 +31,7 @@ personal radio with skip learning.
 |---|---|
 | **My mix** | a wave built from your liked songs |
 | **Playlist waves** | pick one playlist for its mood, or several for a mix |
-| **Track / artist waves** | right-click a track or an artist → wave in its spirit |
+| **Track / artist / album waves** | right-click a track, an artist or an album → wave in its spirit |
 | **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
 | **Mood presets** | Calm / Mid / Energetic, filtered by BPM |
 | **Auto-extend** | adds more tracks as the wave runs out |
@@ -41,6 +41,7 @@ personal radio with skip learning.
 | **Stats** | plays, skips, completion, top artists, weekday/hour distribution, average tempo |
 | **Scrobbling** | optional ListenBrainz export |
 | **Playlist export** | “Save to playlist” creates a snapshot that syncs to your phone |
+| **Profile backup** | export/import the learned taste profile and settings as JSON |
 
 ## Requirements
 
@@ -175,6 +176,16 @@ App data: remove `wave.*` keys from localStorage (DevTools → Application).
 Issues and PRs are welcome. The app is plain ES5-ish JS without a build step —
 `node --check app/index.js` plus a manual run in the client is enough for most changes.
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Roadmap
+
+- [x] Playlist / track / artist / album waves
+- [x] Skip learning, mood presets, auto-extend
+- [x] Bilingual UI, native redesign, brand identity
+- [ ] Spicetify Marketplace listing
+- [ ] Scheduled waves (morning mix)
+- [ ] Shared presets and community mood packs
+- [ ] Optional local server for generating from a phone
 
 ## Brand
 

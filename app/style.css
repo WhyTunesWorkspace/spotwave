@@ -390,6 +390,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+.wave-row-bpm {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--wave-sub);
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.wave-label-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .wave-row-actions {
   flex: 0 0 auto;
   display: flex;

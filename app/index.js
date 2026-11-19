@@ -154,6 +154,8 @@ var I18N = {
     "Готовлю волну…": "Preparing the wave…",
     "по артисту «": "by artist «",
     "по артисту": "by artist",
+    "по альбому «": "from album «",
+    "по альбому": "from album",
     "по треку «": "from track «",
     "по треку": "from track",
     "Не удалось найти треки для этой волны": "Could not find tracks for this wave",
@@ -215,6 +217,13 @@ var I18N = {
     "Выбери источники — лайки или плейлисты": "Pick sources — liked songs or playlists",
     "Собери волну кнопкой выше": "Build a wave with the button above",
     "Скипай и лайкай — Волна подстроится": "Skip and like — Wave adapts",
+    "Экспорт данных": "Export data",
+    "Импорт": "Import",
+    "Профиль вкуса, история и настройки — в JSON": "Taste profile, history and settings as JSON",
+    "Данные экспортированы": "Data exported",
+    "Данные импортированы": "Data imported",
+    "Не удалось прочитать файл": "Could not read the file",
+    "Темп": "Tempo",
     "Язык": "Language",
     "Авто": "Auto"
   }
@@ -557,6 +566,25 @@ var api = {
 
   seedPlaylist: function (tracks) {
     return api.fillPlaylist(SEED_NAME, tracks);
+  },
+
+  albumTracks: async function (albumUri) {
+    try {
+      var r = await Spicetify.GraphQL.Request(Spicetify.GraphQL.Definitions.queryAlbumTracks, {
+        uri: albumUri,
+        offset: 0,
+        limit: 50
+      });
+      var txt = JSON.stringify(r);
+      var found = txt.match(/spotify:track:[A-Za-z0-9]{22}/g) || [];
+      var uris = found.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      var name = "";
+      try { name = (r.data.albumUnion && r.data.albumUnion.name) || ""; } catch (e) {}
+      return { uris: uris.slice(0, 10), name: name };
+    } catch (e) {
+      console.warn("[wave] albumTracks failed", e);
+      return { uris: [], name: "" };
+    }
   },
 
   trackInfo: async function (uri) {
@@ -1098,6 +1126,7 @@ function TrackRow(props) {
         t.reason ? h("span", { className: "wave-row-reason" }, " · " + t.reason) : null
       )
     ),
+    t.bpm ? h("div", { className: "wave-row-bpm", title: T("Темп") }, String(t.bpm)) : null,
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
       h("button", { className: "wave-icon", title: T("Нравится"), "aria-label": T("Нравится"), onClick: function () { likeTrack(t); } }, icon("heart")),
@@ -1274,6 +1303,10 @@ function WaveApp() {
         var info = await api.artistTopTracks(seed.uri);
         uris = info.uris;
         label = info.name ? T("по артисту «") + info.name + "»" : T("по артисту");
+      } else if (seed.type === "album") {
+        var album = await api.albumTracks(seed.uri);
+        uris = album.uris;
+        label = album.name ? T("по альбому «") + album.name + "»" : T("по альбому");
       } else {
         uris = [seed.uri];
         var meta = await api.trackInfo(seed.uri);
@@ -1313,6 +1346,48 @@ function WaveApp() {
       setError(String((e && e.message) || e));
       setBusy("");
     }
+  }
+
+  function exportState() {
+    try {
+      var blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var d = new Date();
+      a.href = url;
+      a.download = "spotwave-" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      Spicetify.showNotification(T("Данные экспортированы"));
+    } catch (e) {
+      setError(String((e && e.message) || e));
+    }
+  }
+
+  function importState(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || "{}"));
+        if (!data || typeof data !== "object") throw new Error("bad file");
+        ["artists", "tracks", "bans", "trackNames", "artistNames", "bpm"].forEach(function (k) {
+          if (data[k] && typeof data[k] === "object") S[k] = data[k];
+        });
+        if (Array.isArray(data.recent)) S.recent = data.recent;
+        if (data.settings && typeof data.settings === "object") {
+          S.settings = Object.assign({}, S.settings, data.settings);
+        }
+        LANG_CACHE = null;
+        persist(); notify();
+        Spicetify.showNotification(T("Данные импортированы"));
+      } catch (e) {
+        setError(T("Не удалось прочитать файл"));
+      }
+    };
+    reader.readAsText(file);
   }
 
   async function save() {
@@ -1498,6 +1573,24 @@ function WaveApp() {
             h("button", { className: "wave-btn small", onClick: checkScrobble }, T("Проверить"))
           ),
           h("div", { className: "wave-hint" }, T("Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину."))
+        ),
+        h("div", { className: "wave-scrobble" },
+          h("div", { className: "wave-scrobble-row" },
+            h("button", { className: "wave-btn small", onClick: exportState }, T("Экспорт данных")),
+            h("label", { className: "wave-btn small wave-label-btn" },
+              T("Импорт"),
+              h("input", {
+                type: "file",
+                accept: "application/json,.json",
+                style: { display: "none" },
+                onChange: function (e) {
+                  importState(e.target.files && e.target.files[0]);
+                  e.target.value = "";
+                }
+              })
+            )
+          ),
+          h("div", { className: "wave-hint" }, T("Профиль вкуса, история и настройки — в JSON"))
         )
       ) : null
     ),

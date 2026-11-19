@@ -127,6 +127,11 @@
           name: tr("Волна по исполнителю", "Wave by this artist"),
           run: function (u) { setSeed("artist", u[0]); },
           ok: function (u) { return one(u, "spotify:artist:"); }
+        },
+        {
+          name: tr("Волна по альбому", "Wave from this album"),
+          run: function (u) { setSeed("album", u[0]); },
+          ok: function (u) { return one(u, "spotify:album:"); }
         }
       ];
 

@@ -3,6 +3,21 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.4.0] — 2026-11-19
+
+### Added
+
+- **Wave from an album** in the context menu (album seeds use GraphQL album tracks).
+- **Export / import** of the taste profile, history and settings as JSON.
+- **BPM** is shown next to each track, so mood filtering is visible.
+- Release automation: pushing a `v*` tag packages the app and publishes a release.
+- Issue and pull-request templates.
+
+### Changed
+
+- Docs: technical write-up (`docs/how-it-works.md`), launch kit (`docs/launch-ru.md`,
+  `docs/launch-en.md`), roadmap in the README.
+
 ## [0.3.0] — 2026-11-19
 
 Brand release: identity, native polish, smarter selection.

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Spicetify documentation
+    url: https://spicetify.app/docs/getting-started
+    about: Installation and patching issues are usually Spicetify, not spotwave.
+  - name: Spotify client support
+    url: https://support.spotify.com
+    about: Account, playback and billing questions belong to Spotify.
