@@ -232,20 +232,52 @@ var I18N = {
 };
 
 var LANG_CACHE = null;
+var LANG_RETRY = null;
+var LANG_TRIES = 0;
+
+function localeNow() {
+  try {
+    var loc = Spicetify.Locale && Spicetify.Locale.getLocale ? Spicetify.Locale.getLocale() : "";
+    if (loc) return loc;
+  } catch (e) {}
+  return "";
+}
 
 function detectLang() {
   var pref = (S.settings && S.settings.lang) || "auto";
   if (pref === "ru" || pref === "en") return pref;
-  try {
-    var loc = Spicetify.Locale && Spicetify.Locale.getLocale ? Spicetify.Locale.getLocale() : "";
-    if (loc) return /^ru/i.test(loc) ? "ru" : "en";
-  } catch (e) {}
+  var loc = localeNow();
+  if (loc) return /^ru/i.test(loc) ? "ru" : "en";
   var nav = (typeof navigator !== "undefined" && navigator.language) || "en";
   return /^ru/i.test(nav) ? "ru" : "en";
 }
 
+// Right after a client restart Spicetify.Locale may not be ready when the app
+// renders for the first time. Don't cache the fallback: retry until it is.
+function retryLang() {
+  if (LANG_RETRY) return;
+  LANG_RETRY = setTimeout(function () {
+    LANG_RETRY = null;
+    if (!localeNow()) {
+      if (LANG_TRIES++ < 40) retryLang();
+      return;
+    }
+    var next = detectLang();
+    if (next !== LANG_CACHE) {
+      LANG_CACHE = next;
+      notify();
+    }
+  }, 300);
+}
+
 function T(s) {
-  if (!LANG_CACHE) LANG_CACHE = detectLang();
+  if (!LANG_CACHE) {
+    LANG_CACHE = detectLang();
+    if (((S.settings && S.settings.lang) || "auto") === "auto" && !localeNow()) {
+      LANG_CACHE = null;
+      retryLang();
+    }
+  }
   if (LANG_CACHE === "ru") return s;
   var v = I18N.en[s];
   return v == null ? s : v;
@@ -1483,7 +1515,11 @@ function WaveApp() {
 
       busy ? h("span", { className: "wave-busy" }, busy) : null,
       h("span", { className: "wave-actions-spacer" }),
-      h("button", { className: "wave-icon-btn", title: T("Настройки"), onClick: function () { setShowAdvanced(!showAdvanced); } }, icon("gear"))
+      h("button", { className: "wave-icon-btn", title: T("Настройки"), onClick: function () {
+        var next = !showAdvanced;
+        setShowAdvanced(next);
+        if (next) setShowStats(false);
+      } }, icon("gear"))
     ),
 
     error ? h("div", { className: "wave-error" }, error) : null,
@@ -1492,9 +1528,17 @@ function WaveApp() {
       h("div", { className: "wave-section-head" },
         h("h2", null, T("Источники")),
         h("div", { className: "wave-links" },
-          h("button", { className: "wave-link", onClick: function () { setShowStats(!showStats); } },
+          h("button", { className: "wave-link", onClick: function () {
+            var next = !showStats;
+            setShowStats(next);
+            if (next) setShowAdvanced(false);
+          } },
             showStats ? T("Скрыть статистику") : T("Статистика")),
-          h("button", { className: "wave-link", onClick: function () { setShowAdvanced(!showAdvanced); } },
+          h("button", { className: "wave-link", onClick: function () {
+            var next = !showAdvanced;
+            setShowAdvanced(next);
+            if (next) setShowStats(false);
+          } },
             showAdvanced ? T("Скрыть настройки") : T("Настройки"))
         )
       ),
