@@ -12,13 +12,28 @@ var HOUR = 3600000;
 var DAY = 86400000;
 
 var DEFAULTS = {
-  settings: { novelty: 0.45, explore: 0.35, diversity: 2, length: 30, clean: false, onlyNew: true },
+  settings: {
+    novelty: 0.45,
+    explore: 0.35,
+    diversity: 2,
+    length: 30,
+    clean: false,
+    onlyNew: true,
+    mood: "any",
+    autoExtend: true,
+    scrobbleEnabled: false,
+    scrobbleToken: ""
+  },
   artists: {},
   tracks: {},
   bans: {},
   recent: [],
   wave: null,
-  sources: null
+  sources: null,
+  trackNames: {},
+  artistNames: {},
+  bpm: {},
+  knownCount: 0
 };
 
 /* ------------------------------ state ------------------------------ */
@@ -35,7 +50,11 @@ function loadState() {
       bans: parsed.bans || {},
       recent: parsed.recent || [],
       wave: parsed.wave || null,
-      sources: parsed.sources || null
+      sources: parsed.sources || null,
+      trackNames: parsed.trackNames || {},
+      artistNames: parsed.artistNames || {},
+      bpm: parsed.bpm || {},
+      knownCount: parsed.knownCount || 0
     };
   } catch (e) {
     return JSON.parse(JSON.stringify(DEFAULTS));
@@ -84,6 +103,35 @@ function isBanned(uri) {
 }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function moodRange(mood) {
+  if (mood === "calm") return [0, 105];
+  if (mood === "mid") return [95, 140];
+  if (mood === "energetic") return [125, 400];
+  return null;
+}
+
+function buildOpts(length) {
+  return {
+    length: length || S.settings.length,
+    novelty: S.settings.novelty,
+    explore: S.settings.explore,
+    diversity: S.settings.diversity,
+    clean: S.settings.clean,
+    onlyNew: S.settings.onlyNew,
+    mood: S.settings.mood
+  };
+}
+
+function rememberMeta(tracks) {
+  (tracks || []).forEach(function (t) {
+    if (t.uri && t.name) S.trackNames[t.uri] = t.name;
+    if (typeof t.bpm === "number") S.bpm[t.uri] = t.bpm;
+    (t.artists || []).forEach(function (a) {
+      if (a.uri && a.name) S.artistNames[a.uri] = a.name;
+    });
+  });
+}
 
 function fmtDuration(ms) {
   if (!ms || ms < 0) return "";
@@ -157,8 +205,12 @@ var api = {
   },
 
   recs: async function (contextUri, skipIds, limit) {
-    var r = await PF.PlaylistAPI.getRecommendedTracks(contextUri, skipIds || [], limit);
-    return (r || []).map(normalizeItem).filter(function (t) {
+    var r = await PF.PlaylistAPI.getRecommendedTracks(contextUri, skipIds || [], limit, { decorateWithBpmAndKey: true });
+    return (r || []).map(function (x) {
+      var t = normalizeItem(x);
+      if (t && typeof x.bpm === "number") t.bpm = x.bpm;
+      return t;
+    }).filter(function (t) {
       return t && t.uri && t.uri.indexOf("spotify:track:") === 0 && !t.isLocal;
     });
   },
@@ -393,17 +445,20 @@ async function generate(sourceUris, opts) {
     var per = clamp(Math.ceil((opts.length * 2.2) / Math.max(1, sourceUris.length)), 30, 100);
     var skipIds = ids(skipUris);
     var results = await Promise.all(sourceUris.map(function (uri) {
-      return api.recs(uri, skipIds, per).catch(function () { return []; });
+      return api.recs(uri, skipIds, per)
+        .catch(function () { return []; })
+        .then(function (arr) { return { uri: uri, arr: arr }; });
     }));
 
     var pool = [];
     var byUri = {};
     var byKey = {};
-    results.forEach(function (arr) {
-      arr.forEach(function (t) {
+    results.forEach(function (res) {
+      res.arr.forEach(function (t) {
         if (byUri[t.uri] || byKey[trackKey(t)] || isBanned(t.uri)) return;
         byUri[t.uri] = true;
         byKey[trackKey(t)] = true;
+        t._src = res.uri;
         pool.push(t);
       });
     });
@@ -439,6 +494,21 @@ async function generate(sourceUris, opts) {
     }
   }
 
+  // Настроение: фильтр по BPM (audio features Spotify закрыл, темп — честная замена).
+  var range = moodRange(opts.mood);
+  if (range) {
+    var matched = [];
+    var unknown = [];
+    pool.forEach(function (t) {
+      if (typeof t.bpm === "number") {
+        if (t.bpm >= range[0] && t.bpm <= range[1]) matched.push(t);
+      } else {
+        unknown.push(t);
+      }
+    });
+    pool = matched.length >= Math.min(opts.length, 8) ? matched : matched.concat(unknown);
+  }
+
   if (!pool.length) {
     throw new Error(opts.onlyNew
       ? "Всё, что нашлось, уже есть в твоих плейлистах и лайках. Отключи «Только новое» или добавь источники."
@@ -446,7 +516,71 @@ async function generate(sourceUris, opts) {
   }
 
   pool.forEach(function (t) { t._score = scoreTrack(t, opts); });
-  return pickTracks(pool, opts);
+  var chosen = pickTracks(pool, opts);
+
+  var labels = {};
+  labels[api.likedContext()] = "из твоих лайков";
+  try {
+    var pls = await api.playlists();
+    pls.forEach(function (p) { labels[p.uri] = "из «" + p.name + "»"; });
+  } catch (e) {}
+
+  chosen.forEach(function (t) {
+    t.reason = (opts.labels && opts.labels[t._src]) || labels[t._src] || "подобрано для тебя";
+    delete t._src;
+    delete t._score;
+  });
+
+  rememberMeta(chosen);
+  return chosen;
+}
+
+/* ------------------------------ auto-extend ------------------------------ */
+
+var autoBusy = false;
+var lastAutoExtend = 0;
+
+async function autoExtend() {
+  if (!S.settings.autoExtend || autoBusy) return;
+  if (!S.wave || !S.wave.liveUri || !S.wave.tracks || S.wave.tracks.length < 8) return;
+  if (now() - lastAutoExtend < 45000) return;
+
+  var data = Spicetify.Player.data || {};
+  var item = data.item;
+  var ctx = data.context && data.context.uri;
+  if (!item || !item.uri) return;
+  if (ctx !== S.wave.liveUri) return;
+
+  var idx = -1;
+  for (var i = 0; i < S.wave.tracks.length; i++) {
+    if (S.wave.tracks[i].uri === item.uri) { idx = i; break; }
+  }
+  if (idx < 0 || idx < S.wave.tracks.length - 4) return;
+
+  autoBusy = true;
+  lastAutoExtend = now();
+  try {
+    var sources = (S.wave.sources && S.wave.sources.length) ? S.wave.sources : [api.likedContext()];
+    var extra = await generate(sources, buildOpts(Math.max(10, Math.round(S.settings.length / 2))));
+    if (!extra.length) return;
+
+    var all = S.wave.tracks.concat(extra);
+    S.wave.tracks = all;
+    persist(); notify();
+
+    try {
+      Spicetify.addToQueue(extra.map(function (t) { return { uri: t.uri }; }));
+    } catch (e) {
+      console.warn("[wave] auto enqueue failed", e);
+    }
+
+    api.livePlaylist(all).catch(function (e) { console.warn("[wave] live refresh failed", e); });
+    Spicetify.showNotification("Волна продолжается: +" + extra.length);
+  } catch (e) {
+    console.warn("[wave] auto-extend failed", e);
+  } finally {
+    autoBusy = false;
+  }
 }
 
 /* ------------------------------ activity tracking ------------------------------ */
@@ -685,14 +819,7 @@ function WaveApp() {
     setBusy("Собираю рекомендации…");
     try {
       var sources = (sourcesOverride && sourcesOverride.length) ? sourcesOverride : selected;
-      var opts = {
-        length: S.settings.length,
-        novelty: S.settings.novelty,
-        explore: S.settings.explore,
-        diversity: S.settings.diversity,
-        clean: S.settings.clean,
-        onlyNew: S.settings.onlyNew
-      };
+      var opts = buildOpts();
       var tracks = await generate(sources, opts);
       if (!tracks.length) throw new Error("Пустая волна. Попробуй другой источник.");
       setBusy("Готовлю очередь…");
@@ -714,13 +841,7 @@ function WaveApp() {
     if (busy) return;
     setBusy("Добавляю…");
     try {
-      var opts = {
-        length: Math.max(10, Math.round(S.settings.length / 2)),
-        novelty: S.settings.novelty,
-        explore: S.settings.explore,
-        diversity: S.settings.diversity,
-        clean: S.settings.clean
-      };
+      var opts = buildOpts(Math.max(10, Math.round(S.settings.length / 2)));
       var extra = await generate(selected, opts);
       if (!extra.length) throw new Error("Не удалось подобрать новые треки.");
       var all = (S.wave && S.wave.tracks ? S.wave.tracks : []).concat(extra);
@@ -839,6 +960,14 @@ function WaveApp() {
           }),
           h("span", null, "Только новое — не брать треки из моих плейлистов и лайков")
         ),
+        h("label", { className: "wave-toggle" },
+          h("input", {
+            type: "checkbox",
+            checked: S.settings.autoExtend !== false,
+            onChange: function (e) { setSetting("autoExtend", e.target.checked); }
+          }),
+          h("span", null, "Автопродление — добирать треки, когда волна заканчивается")
+        ),
         h("div", { className: "wave-known" },
           h("span", null, S.knownCount ? "Исключаю знакомых треков: " + S.knownCount : "Список знакомых треков соберётся при первой генерации"),
           h("button", { className: "wave-link", onClick: refreshKnown }, "обновить")
@@ -898,3 +1027,11 @@ function render() {
 }
 
 drainEvents();
+
+try {
+  Spicetify.Player.addEventListener("songchange", function () {
+    setTimeout(autoExtend, 800);
+  });
+} catch (e) {
+  console.warn("[wave] auto-extend hook failed", e);
+}
