@@ -667,6 +667,13 @@ function finalizeEvent(ev) {
   S.recent.unshift({ uri: ev.uri, at: ev.at || now(), played: played, dur: dur });
   if (S.recent.length > 400) S.recent.length = 400;
 
+  if (ev.name) S.trackNames[ev.uri] = ev.name;
+  if (ev.artistNames && ev.artistNames.length) {
+    (ev.artists || []).forEach(function (uri, i) {
+      if (uri && ev.artistNames[i]) S.artistNames[uri] = ev.artistNames[i];
+    });
+  }
+
   (ev.artists || []).forEach(function (a) {
     if (wasSkip) bumpArtist(a, "skips");
     else if (wasComplete) bumpArtist(a, "completes");
@@ -975,6 +982,26 @@ function WaveApp() {
     });
   }
 
+  async function checkScrobble() {
+    var token = (S.settings.scrobbleToken || "").trim();
+    if (!token) { setError("Укажи токен ListenBrainz"); return; }
+    try {
+      var r = await fetch("https://api.listenbrainz.org/1/validate-token", {
+        headers: { Authorization: "Token " + token }
+      });
+      var j = await r.json();
+      if (j && j.valid) {
+        setError("");
+        setSetting("scrobbleEnabled", true);
+        Spicetify.showNotification("ListenBrainz: " + (j.user_name || "токен принят"));
+      } else {
+        setError("ListenBrainz не принял токен");
+      }
+    } catch (e) {
+      setError("Не удалось проверить токен: сеть или CORS");
+    }
+  }
+
   async function run(sourcesOverride) {
     if (busy) return;
     setError("");
@@ -1216,6 +1243,27 @@ function WaveApp() {
         h("div", { className: "wave-known" },
           h("span", null, S.knownCount ? "Исключаю знакомых треков: " + S.knownCount : "Список знакомых треков соберётся при первой генерации"),
           h("button", { className: "wave-link", onClick: refreshKnown }, "обновить")
+        ),
+        h("div", { className: "wave-scrobble" },
+          h("label", { className: "wave-toggle" },
+            h("input", {
+              type: "checkbox",
+              checked: !!S.settings.scrobbleEnabled,
+              onChange: function (e) { setSetting("scrobbleEnabled", e.target.checked); }
+            }),
+            h("span", null, "Скробблить в ListenBrainz — история и рекомендации вне Spotify")
+          ),
+          h("div", { className: "wave-scrobble-row" },
+            h("input", {
+              className: "wave-input",
+              type: "password",
+              placeholder: "токен ListenBrainz",
+              value: S.settings.scrobbleToken || "",
+              onChange: function (e) { setSetting("scrobbleToken", e.target.value.trim()); }
+            }),
+            h("button", { className: "wave-btn small", onClick: checkScrobble }, "Проверить")
+          ),
+          h("div", { className: "wave-hint" }, "Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину.")
         )
       ) : null
     ),

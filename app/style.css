@@ -322,6 +322,32 @@
   font-variant-numeric: tabular-nums;
 }
 
+.wave-scrobble {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--wave-line);
+}
+
+.wave-scrobble-row { display: flex; gap: 8px; }
+
+.wave-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--wave-line);
+  color: var(--wave-text);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.wave-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.3); }
+
+.wave-btn.small { padding: 8px 14px; font-size: 13px; }
+
 /* ---------------- settings ---------------- */
 
 .wave-settings {

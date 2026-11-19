@@ -18,6 +18,49 @@
       if (arr.length > MAX) arr = arr.slice(arr.length - MAX);
       localStorage.setItem(KEY, JSON.stringify(arr));
     } catch (e) {}
+    submitListen(ev);
+  }
+
+  function waveSettings() {
+    try {
+      var s = JSON.parse(localStorage.getItem("wave.v1") || "{}");
+      return s.settings || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function submitListen(ev) {
+    var st = waveSettings();
+    if (!st.scrobbleEnabled || !st.scrobbleToken) return;
+    if (!ev || !ev.dur) return;
+    if (ev.played < Math.min(ev.dur * 0.5, 240000) || ev.played < 30000) return;
+
+    var body = {
+      listen_type: "single",
+      payload: [{
+        listened_at: Math.floor((ev.at || Date.now()) / 1000),
+        track_metadata: {
+          artist_name: (ev.artistNames || []).join(", "),
+          track_name: ev.name || "",
+          release_name: ev.album || "",
+          additional_info: { submission_client: "Wave for Spotify", media_player: "Spotify" }
+        }
+      }]
+    };
+
+    try {
+      fetch("https://api.listenbrainz.org/1/submit-listens", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Token " + st.scrobbleToken
+        },
+        body: JSON.stringify(body)
+      }).catch(function (e) { console.warn("[wave] scrobble failed", e); });
+    } catch (e) {
+      console.warn("[wave] scrobble failed", e);
+    }
   }
 
   function installMenu() {
@@ -102,6 +145,8 @@
         uri: it0.uri,
         name: it0.name,
         artists: (it0.artists || []).map(function (a) { return a.uri; }).filter(Boolean),
+        artistNames: (it0.artists || []).map(function (a) { return a.name; }).filter(Boolean),
+        album: (it0.album && it0.album.name) || "",
         played: 0,
         dur: (it0.duration && it0.duration.milliseconds) || 0,
         at: Date.now()
@@ -120,6 +165,8 @@
           uri: it.uri,
           name: it.name,
           artists: (it.artists || []).map(function (a) { return a.uri; }).filter(Boolean),
+          artistNames: (it.artists || []).map(function (a) { return a.name; }).filter(Boolean),
+          album: (it.album && it.album.name) || "",
           played: 0,
           dur: (it.duration && it.duration.milliseconds) || 0,
           at: Date.now()
