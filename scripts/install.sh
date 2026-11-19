@@ -35,9 +35,9 @@ if [ -t 0 ]; then read -r _; fi
 
 spicetify config custom_apps wave
 if [ -d "$CONFIG_DIR/Backup" ] && [ -n "$(ls -A "$CONFIG_DIR/Backup" 2>/dev/null || true)" ]; then
-  spicetify apply
+  spicetify apply || echo "[spotwave] spicetify returned non-zero; if Spotify looks fine, ignore"
 else
-  spicetify backup apply
+  spicetify backup apply || echo "[spotwave] spicetify returned non-zero; if Spotify looks fine, ignore"
 fi
 
 echo "[spotwave] Done. Open Spotify — the wave icon is in the top-left corner."
