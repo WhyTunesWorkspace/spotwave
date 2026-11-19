@@ -947,6 +947,20 @@ function WaveApp() {
       ),
       h("div", { className: "wave-hint" }, "Выбери один плейлист — получишь волну в его настроении. Несколько — микс."),
 
+      h("div", { className: "wave-mood" },
+        h("span", { className: "wave-mood-label" }, "Настроение"),
+        h("div", { className: "wave-chips" },
+          [["any", "Любое"], ["calm", "Спокойное"], ["mid", "Среднее"], ["energetic", "Энергичное"]].map(function (pair) {
+            var on = (S.settings.mood || "any") === pair[0];
+            return h("button", {
+              key: pair[0],
+              className: "wave-chip" + (on ? " on" : ""),
+              onClick: function () { setSetting("mood", pair[0]); }
+            }, pair[1]);
+          })
+        )
+      ),
+
       showAdvanced ? h("div", { className: "wave-settings" },
         h(Slider, { label: "Новизна", value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }),
         h(Slider, { label: "Разнообразие", value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }),

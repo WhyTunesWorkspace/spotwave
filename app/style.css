@@ -210,6 +210,24 @@
 
 .wave-hint { margin-top: 10px; font-size: 12px; color: var(--wave-sub); }
 
+.wave-mood {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wave-mood-label {
+  font-size: 12px;
+  color: var(--wave-sub);
+  min-width: 72px;
+}
+
+.wave-row-reason {
+  color: rgba(255, 255, 255, 0.42);
+}
+
 /* ---------------- settings ---------------- */
 
 .wave-settings {
