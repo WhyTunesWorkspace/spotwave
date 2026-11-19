@@ -3,6 +3,15 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.2.1] — 2026-11-19
+
+### Fixed
+
+- Public Windows installer is now pure ASCII: PowerShell 5.1 no longer fails to parse
+  non-ASCII characters when the script is fetched with `iwr | iex`.
+- The installer exits with code 0 after a successful patch (Spicetify itself returns 1).
+- More Spicetify CLI locations are searched automatically.
+
 ## [0.2.0] — 2026-11-19
 
 Global-readiness release: bilingual UI, native redesign, one-line install, real releases.
