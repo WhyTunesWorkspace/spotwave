@@ -5,7 +5,7 @@ Updated: 2026-11-19
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.6.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.6.1** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 

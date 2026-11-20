@@ -216,6 +216,7 @@ var I18N = {
     "Настроение": "Mood",
     "Любое": "Any",
     "Спокойное": "Calm",
+    "Грустное": "Sad",
     "Среднее": "Mid",
     "Энергичное": "Energetic",
     "Новизна": "Novelty",
@@ -375,6 +376,7 @@ function isBanned(uri) {
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function moodRange(mood) {
+  if (mood === "sad") return [55, 105];
   if (mood === "slow") return [0, 90];
   if (mood === "calm") return [0, 105];
   if (mood === "focus") return [90, 125];
@@ -553,6 +555,10 @@ var api = {
     return (r || []).map(function (x) {
       var t = normalizeItem(x);
       if (t && typeof x.bpm === "number") t.bpm = x.bpm;
+      if (t && x.trackKey) {
+        if (x.trackKey.mode) t.keyMode = x.trackKey.mode;
+        if (x.trackKey.camelotKey) t.camelot = x.trackKey.camelotKey;
+      }
       return t;
     }).filter(function (t) {
       return t && t.uri && t.uri.indexOf("spotify:track:") === 0 && !t.isLocal;
@@ -835,7 +841,13 @@ async function generate(sourceUris, opts) {
   }
 
   async function fetchPool(skipUris) {
-    var per = clamp(Math.ceil((opts.length * 2.2) / Math.max(1, sourceUris.length)), 30, 100);
+    // A mood preset narrows the result a lot, so ask for more candidates then.
+    var moodFocused = opts.mood && opts.mood !== "any";
+    var per = clamp(
+      Math.ceil((opts.length * (moodFocused ? 3.2 : 2.2)) / Math.max(1, sourceUris.length)),
+      moodFocused ? 40 : 30,
+      120
+    );
     var skipIds = ids(skipUris);
     var results = await Promise.all(sourceUris.map(function (uri) {
       return api.recs(uri, skipIds, per)
@@ -899,7 +911,29 @@ async function generate(sourceUris, opts) {
         unknown.push(t);
       }
     });
-    pool = matched.length >= Math.min(opts.length, 8) ? matched : matched.concat(unknown);
+    if (matched.length >= Math.min(opts.length, 12)) {
+      pool = matched;
+    } else {
+      // Узкое настроение не должно ронять волну: добираем ближайшие по темпу.
+      var center = (range[0] + range[1]) / 2;
+      var near = pool
+        .filter(function (t) { return typeof t.bpm === "number" && matched.indexOf(t) < 0; })
+        .sort(function (a, b) {
+          return Math.abs(a.bpm - center) - Math.abs(b.bpm - center);
+        });
+      pool = matched.concat(near).concat(unknown);
+    }
+  }
+
+  // «Грустное»: к темпу добавляем минорную тональность. Если минора мало —
+  // оставляем BPM-подборку, чтобы волна не оказалась пустой.
+  if (opts.mood === "sad" && pool.length) {
+    var minor = pool.filter(function (t) { return t.keyMode === "minor"; });
+    if (minor.length >= Math.min(opts.length, 8)) pool = minor;
+    else if (minor.length) {
+      var rest = pool.filter(function (t) { return t.keyMode !== "minor"; });
+      pool = minor.concat(rest);
+    }
   }
 
   if (!pool.length) {
@@ -1739,7 +1773,7 @@ function WaveApp() {
         h("span", { className: "wave-mood-label" }, T("Настроение")),
         h("div", { className: "wave-chips" },
           (function () {
-            var base = [["any", T("Любое")], ["calm", T("Спокойное")], ["mid", T("Среднее")], ["energetic", T("Энергичное")]];
+            var base = [["any", T("Любое")], ["calm", T("Спокойное")], ["sad", T("Грустное")], ["mid", T("Среднее")], ["energetic", T("Энергичное")]];
             var extra = [["slow", T("Медленное")], ["focus", T("Фокус")], ["fast", T("Быстрое")]];
             var list = adv ? base.concat(extra) : base.slice();
             var cur = S.settings.mood || "any";
@@ -1815,6 +1849,7 @@ function WaveApp() {
             onChange: function (e) { setMorning("mood", e.target.value); }
           },
             h("option", { value: "calm" }, T("Спокойное")),
+            h("option", { value: "sad" }, T("Грустное")),
             h("option", { value: "slow" }, T("Медленное")),
             h("option", { value: "focus" }, T("Фокус")),
             h("option", { value: "mid" }, T("Среднее")),

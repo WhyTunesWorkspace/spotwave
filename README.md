@@ -32,7 +32,7 @@ personal radio with skip learning.
 | **Playlist waves** | pick one playlist for its mood, or several for a mix |
 | **Track / artist / album waves** | right-click a track, an artist or an album → wave in its spirit |
 | **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
-| **Mood presets** | Calm / Mid / Energetic, plus Slow / Focus / Fast in advanced mode — filtered by BPM |
+| **Mood presets** | Calm / Sad / Mid / Energetic, plus Slow / Focus / Fast in advanced mode — filtered by BPM (Sad also prefers minor keys) |
 | **Morning wave** | a scheduled calm wave: at the set time the app shows a "build it?" button (nothing autoplays) |
 | **Simple / Advanced settings** | two modes of the settings panel: essentials by default, every knob in advanced |
 | **Auto-extend** | adds more tracks as the wave runs out |
@@ -114,7 +114,7 @@ switchable in Settings).
 | Length | tracks generated per run |
 | Exploration | amount of randomness |
 | Only new | exclude liked/playlists/recently played |
-| Mood | BPM filter: calm / mid / energetic / any, plus slow / focus / fast in advanced mode |
+| Mood | BPM filter: calm / sad / mid / energetic / any, plus slow / focus / fast in advanced mode |
 | Morning wave | schedule a calm wave; at that time a "build it?" button appears, nothing autoplays |
 | Simple / Advanced | switch the settings panel between essentials and every knob |
 | Auto-extend | top up the queue when the wave ends |

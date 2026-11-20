@@ -3,6 +3,15 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.6.1] — 2026-11-20
+
+### Added
+
+- **Sad mood**: low-tempo tracks (55-105 BPM) with a preference for minor keys. It sits in
+  the basic mood row and in the morning-wave mood list.
+- Candidate fetching asks for more tracks when a mood is active, and narrow moods now top up
+  with the closest tempos instead of producing a three-track wave.
+
 ## [0.6.0] — 2026-11-20
 
 ### Added
