@@ -355,6 +355,67 @@
   cursor: pointer;
 }
 
+/* ---------------- settings modes / morning bar ---------------- */
+
+.wave-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.wave-settings-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wave-sub);
+}
+
+.wave-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wave-seg-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--wave-sub);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.wave-seg-btn:hover { color: var(--wave-text); }
+.wave-seg-btn.on { background: #fff; color: #000; }
+
+.wave-time { flex: 0 0 120px; width: 120px; }
+
+.wave-morning-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 4px 32px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--wave-line);
+  border-radius: 8px;
+  background: var(--wave-card);
+}
+
+.wave-morning-icon { display: inline-flex; color: var(--wave-accent); }
+.wave-morning-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.wave-morning-text strong { font-weight: 600; }
+.wave-morning-text span { font-size: 12px; color: var(--wave-sub); }
+
 /* ---------------- track list ---------------- */
 
 .wave-list { margin-top: 6px; }
@@ -596,6 +657,7 @@
   .wave-header { padding: 28px 20px 16px; min-height: 220px; }
   .wave-header-cover { width: 160px; height: 160px; flex-basis: 160px; }
   .wave-actions, .wave-section { padding-left: 20px; padding-right: 20px; }
+  .wave-morning-bar { margin-left: 20px; margin-right: 20px; }
   .wave-stats, .wave-error, .wave-foot, .wave-empty { margin-left: 20px; margin-right: 20px; }
 }
 

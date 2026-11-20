@@ -5,7 +5,7 @@ Updated: 2026-11-19
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.5.2** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.6.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 
@@ -54,7 +54,9 @@ Next steps:
    `docs/marketplace-preview.png` (1200², ink + icon + wordmark + UI card).
 2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN).
 3. ~~Pinned feedback issue~~ created after the 0.5.1 release.
-4. Optional: scheduled morning wave, community mood presets.
+4. ~~Scheduled morning wave~~ done in v0.6.0: prompt bar, no autoplay; simple/advanced
+   settings with extra mood presets.
+5. Next feature: shared presets and community mood packs.
 
 ## Commands
 

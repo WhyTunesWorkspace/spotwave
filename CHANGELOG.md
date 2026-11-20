@@ -3,6 +3,23 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.6.0] — 2026-11-20
+
+### Added
+
+- **Morning wave**: a scheduled calm wave. Pick a time, mood and "weekdays only";
+  at that time the app shows a "build it?" bar with a time window — nothing starts on its
+  own. A sun button in the toolbar builds one on demand.
+- **Simple / Advanced settings**: the panel has two modes. Simple keeps sources, mood,
+  length, language, "only new" and auto-extend. Advanced adds novelty, diversity,
+  exploration, the morning schedule, known tracks, scrobbling and profile import/export.
+- Three extra mood presets in advanced mode: Slow (≤90 BPM), Focus (90-125), Fast (140+).
+
+### Changed
+
+- The wave header marks morning waves ("Утренняя волна / Morning wave").
+- The morning scheduler only re-renders to surface the prompt; it never autoplays.
+
 ## [0.5.2] — 2026-11-20
 
 ### Fixed

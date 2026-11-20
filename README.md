@@ -32,7 +32,9 @@ personal radio with skip learning.
 | **Playlist waves** | pick one playlist for its mood, or several for a mix |
 | **Track / artist / album waves** | right-click a track, an artist or an album → wave in its spirit |
 | **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
-| **Mood presets** | Calm / Mid / Energetic, filtered by BPM |
+| **Mood presets** | Calm / Mid / Energetic, plus Slow / Focus / Fast in advanced mode — filtered by BPM |
+| **Morning wave** | a scheduled calm wave: at the set time the app shows a "build it?" button (nothing autoplays) |
+| **Simple / Advanced settings** | two modes of the settings panel: essentials by default, every knob in advanced |
 | **Auto-extend** | adds more tracks as the wave runs out |
 | **Skip learning** | a background extension records plays and skips even when the tab is closed |
 | **Manual feedback** | like (adds to Liked Songs), hide track for 45 days, mute artist |
@@ -112,7 +114,9 @@ switchable in Settings).
 | Length | tracks generated per run |
 | Exploration | amount of randomness |
 | Only new | exclude liked/playlists/recently played |
-| Mood | BPM filter: calm / mid / energetic / any |
+| Mood | BPM filter: calm / mid / energetic / any, plus slow / focus / fast in advanced mode |
+| Morning wave | schedule a calm wave; at that time a "build it?" button appears, nothing autoplays |
+| Simple / Advanced | switch the settings panel between essentials and every knob |
 | Auto-extend | top up the queue when the wave ends |
 | Language | auto / Russian / English |
 
@@ -185,9 +189,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - [x] Playlist / track / artist / album waves
 - [x] Skip learning, mood presets, auto-extend
+- [x] Morning wave on a schedule (prompt, not autoplay)
+- [x] Simple / Advanced settings modes
 - [x] Bilingual UI, native redesign, brand identity
 - [x] Spicetify Marketplace listing
-- [ ] Scheduled waves (morning mix)
 - [ ] Shared presets and community mood packs
 - [ ] Optional local server for generating from a phone
 

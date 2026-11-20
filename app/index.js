@@ -13,7 +13,8 @@ var ICONS = {
   close: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>',
   ban: '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M4 12L12 4"/></svg>',
   more: '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg>',
-  gear: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+  gear: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"/></svg>'
 };
 
 function icon(name) {
@@ -57,7 +58,8 @@ var DEFAULTS = {
     autoExtend: true,
     scrobbleEnabled: false,
     scrobbleToken: "",
-    lang: "auto"
+    lang: "auto",
+    view: "simple"
   },
   artists: {},
   tracks: {},
@@ -68,7 +70,15 @@ var DEFAULTS = {
   trackNames: {},
   artistNames: {},
   bpm: {},
-  knownCount: 0
+  knownCount: 0,
+  morning: {
+    enabled: false,
+    time: "08:00",
+    mood: "calm",
+    weekdays: false,
+    lastRun: "",
+    dismissed: ""
+  }
 };
 
 /* ------------------------------ state ------------------------------ */
@@ -89,7 +99,8 @@ function loadState() {
       trackNames: parsed.trackNames || {},
       artistNames: parsed.artistNames || {},
       bpm: parsed.bpm || {},
-      knownCount: parsed.knownCount || 0
+      knownCount: parsed.knownCount || 0,
+      morning: Object.assign({}, DEFAULTS.morning, parsed.morning || {})
     };
   } catch (e) {
     return JSON.parse(JSON.stringify(DEFAULTS));
@@ -137,6 +148,28 @@ var I18N = {
     "Мой микс": "My mix",
     "Оставь хотя бы один источник": "Keep at least one source",
     "Обновляю список знакомого…": "Refreshing known tracks…",
+    "Собираю утреннюю волну…": "Building your morning wave…",
+    "Утренняя волна": "Morning wave",
+    "Утренняя волна готова": "Morning wave is ready",
+    "Утренняя волна по расписанию": "Morning wave on a schedule",
+    "Утренняя волна уже собрана": "Morning wave is ready to play",
+    "Время": "Time",
+    "Только по будням": "Weekdays only",
+    "Пока Spotify открыт. Пропустили — предложим при следующем запуске.":
+      "Runs while Spotify is open. Missed it? We will offer it next time.",
+    "Пока Spotify открыт. Волна не запустится сама — покажем кнопку.":
+      "Runs while Spotify is open. Nothing starts on its own - we show a button.",
+    "Просто": "Simple",
+    "Подробно": "Advanced",
+    "Медленное": "Slow",
+    "Фокус": "Focus",
+    "Быстрое": "Fast",
+    "Больше настроений в подробном режиме": "More moods in advanced mode",
+    "Больше настроений и тонких настроек — в режиме «Подробно».":
+      "More moods and fine-tuning live in Advanced mode.",
+    "Доброе утро. Собрать утреннюю волну?": "Good morning. Build your morning wave?",
+    "Собрать": "Build",
+    "Позже": "Later",
     "Знакомых треков: ": "Known tracks: ",
     "Укажи токен ListenBrainz": "Enter a ListenBrainz token",
     "токен принят": "token accepted",
@@ -342,10 +375,39 @@ function isBanned(uri) {
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function moodRange(mood) {
+  if (mood === "slow") return [0, 90];
   if (mood === "calm") return [0, 105];
+  if (mood === "focus") return [90, 125];
   if (mood === "mid") return [95, 140];
   if (mood === "energetic") return [125, 400];
+  if (mood === "fast") return [140, 400];
   return null;
+}
+
+/* ------------------------------ morning wave ------------------------------ */
+
+function pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+function dayKey(d) {
+  d = d || new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+
+// "08:30" -> 510 minutes. Bad input falls back to 08:00.
+function parseClock(value) {
+  var m = /^(\d{1,2}):(\d{2})$/.exec(String(value || "").trim());
+  if (!m) return 8 * 60;
+  return Math.min(23, Number(m[1])) * 60 + Math.min(59, Number(m[2]));
+}
+
+function minutesNow(d) {
+  d = d || new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function isWeekend(d) {
+  d = d || new Date();
+  return d.getDay() === 0 || d.getDay() === 6;
 }
 
 function buildOpts(length) {
@@ -1309,8 +1371,47 @@ function WaveApp() {
     }
   }
 
-  async function more() {
+  function setMorning(key, value) {
+    if (!S.morning) S.morning = Object.assign({}, DEFAULTS.morning);
+    S.morning[key] = value;
+    persist(); notify();
+  }
+
+  async function runMorning() {
     if (busy) return;
+    var m = S.morning || DEFAULTS.morning;
+    setError("");
+    setBusy(T("Собираю утреннюю волну…"));
+    try {
+      var sources = selected.length ? selected : [api.likedContext()];
+      var opts = buildOpts();
+      opts.mood = m.mood || "calm";
+      var tracks = await generate(sources, opts);
+      if (!tracks.length) throw new Error(T("Пустая волна. Попробуй другой источник."));
+      setBusy(T("Готовлю очередь…"));
+      var liveUri = await api.livePlaylist(tracks);
+      S.wave = {
+        tracks: tracks,
+        sources: sources.slice(),
+        createdAt: now(),
+        liveUri: liveUri,
+        kind: "morning"
+      };
+      S.morning.lastRun = dayKey();
+      S.morning.dismissed = "";
+      persist(); notify();
+      setBusy(T("Запускаю…"));
+      await api.playContext(liveUri);
+      setBusy("");
+      Spicetify.showNotification(T("Утренняя волна готова"));
+    } catch (e) {
+      console.error("[wave] morning", e);
+      setError(String((e && e.message) || e));
+      setBusy("");
+    }
+  }
+
+  async function more() {    if (busy) return;
     setBusy(T("Добавляю…"));
     try {
       var opts = buildOpts(Math.max(10, Math.round(S.settings.length / 2)));
@@ -1497,6 +1598,35 @@ function WaveApp() {
   var totalMs = wave.reduce(function (a, t) { return a + (t.durationMs || 0); }, 0);
   var heroCover = wave.length && wave[0].album ? wave[0].album.image : (curItem && curItem.album && curItem.album.images && curItem.album.images[0] ? curItem.album.images[0].url : "");
 
+  var morning = S.morning || DEFAULTS.morning;
+  var adv = (S.settings.view || "simple") === "advanced";
+  var morningSince = minutesNow() - parseClock(morning.time);
+  var morningDue = !!morning.enabled
+    && morningSince >= 0 && morningSince <= 240
+    && morning.lastRun !== dayKey()
+    && morning.dismissed !== dayKey()
+    && !(morning.weekdays && isWeekend());
+
+  // Morning waves never start on their own: the timer only re-renders so the
+  // "build it?" banner appears on time while the app is open.
+  var morningTick = React.useRef("");
+  React.useEffect(function () {
+    var timer = setInterval(function () {
+      var m = S.morning;
+      if (!m || !m.enabled) return;
+      var d = new Date();
+      var since = minutesNow(d) - parseClock(m.time);
+      if (since < 0 || since > 240) return;
+      if (m.weekdays && isWeekend(d)) return;
+      if (m.lastRun === dayKey(d) || m.dismissed === dayKey(d)) return;
+      var key = dayKey(d) + ":" + d.getHours() + ":" + d.getMinutes();
+      if (morningTick.current === key) return;
+      morningTick.current = key;
+      notify();
+    }, 30000);
+    return function () { clearInterval(timer); };
+  }, []);
+
   return h("div", { className: "wave-app" },
     h("header", { className: "wave-header" },
       h("div", { className: "wave-header-bg", style: heroCover ? { backgroundImage: 'url("' + heroCover + '")' } : {} }),
@@ -1513,6 +1643,7 @@ function WaveApp() {
                       ? reasonText({ kind: "seed", type: S.wave.seedType, name: S.wave.seedName || "" })
                       : S.wave.seedLabel)
                   : null,
+                (S.wave && S.wave.kind === "morning") ? T("Утренняя волна") : null,
                 wave.length + T(" треков"),
                 totalDurationText(totalMs)
               ].filter(Boolean).join(" · ")
@@ -1520,6 +1651,20 @@ function WaveApp() {
         )
       )
     ),
+
+    morningDue ? h("div", { className: "wave-morning-bar" },
+      h("span", { className: "wave-morning-icon" }, icon("sun")),
+      h("div", { className: "wave-morning-text" },
+        h("strong", null, T("Доброе утро. Собрать утреннюю волну?")),
+        h("span", null, T("Время") + ": " + morning.time)
+      ),
+      h("span", { className: "wave-actions-spacer" }),
+      h("button", { className: "wave-btn small", disabled: !!busy, onClick: runMorning }, T("Собрать")),
+      h("button", {
+        className: "wave-link",
+        onClick: function () { setMorning("dismissed", dayKey()); }
+      }, T("Позже"))
+    ) : null,
 
     h("div", { className: "wave-actions" },
       h("button", {
@@ -1543,6 +1688,13 @@ function WaveApp() {
 
       busy ? h("span", { className: "wave-busy" }, busy) : null,
       h("span", { className: "wave-actions-spacer" }),
+      h("button", {
+        className: "wave-icon-btn",
+        title: T("Утренняя волна"),
+        "aria-label": T("Утренняя волна"),
+        disabled: !!busy,
+        onClick: runMorning
+      }, icon("sun")),
       h("button", { className: "wave-icon-btn", title: T("Настройки"), onClick: function () {
         var next = !showAdvanced;
         setShowAdvanced(next);
@@ -1586,7 +1738,18 @@ function WaveApp() {
       h("div", { className: "wave-mood" },
         h("span", { className: "wave-mood-label" }, T("Настроение")),
         h("div", { className: "wave-chips" },
-          [["any", T("Любое")], ["calm", T("Спокойное")], ["mid", T("Среднее")], ["energetic", T("Энергичное")]].map(function (pair) {
+          (function () {
+            var base = [["any", T("Любое")], ["calm", T("Спокойное")], ["mid", T("Среднее")], ["energetic", T("Энергичное")]];
+            var extra = [["slow", T("Медленное")], ["focus", T("Фокус")], ["fast", T("Быстрое")]];
+            var list = adv ? base.concat(extra) : base.slice();
+            var cur = S.settings.mood || "any";
+            var known = list.some(function (p) { return p[0] === cur; });
+            if (!known) {
+              var found = extra.filter(function (p) { return p[0] === cur; })[0];
+              if (found) list = [found].concat(list);
+            }
+            return list;
+          })().map(function (pair) {
             var on = (S.settings.mood || "any") === pair[0];
             return h("button", {
               key: pair[0],
@@ -1598,10 +1761,23 @@ function WaveApp() {
       ),
 
       showAdvanced ? h("div", { className: "wave-settings" },
-        h(Slider, { label: T("Новизна"), value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }),
-        h(Slider, { label: T("Разнообразие"), value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }),
+        h("div", { className: "wave-settings-head" },
+          h("span", { className: "wave-settings-title" }, T("Настройки")),
+          h("div", { className: "wave-seg", role: "group" },
+            ["simple", "advanced"].map(function (v) {
+              var on = (S.settings.view || "simple") === v;
+              return h("button", {
+                key: v,
+                className: "wave-seg-btn" + (on ? " on" : ""),
+                onClick: function () { setSetting("view", v); }
+              }, v === "simple" ? T("Просто") : T("Подробно"));
+            })
+          )
+        ),
+        adv ? h(Slider, { label: T("Новизна"), value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }) : null,
+        adv ? h(Slider, { label: T("Разнообразие"), value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }) : null,
         h(Slider, { label: T("Длина"), value: S.settings.length, min: 10, max: 60, step: 5, onChange: function (v) { setSetting("length", v); } }),
-        h(Slider, { label: T("Эксперимент"), value: S.settings.explore, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("explore", v); } }),
+        adv ? h(Slider, { label: T("Эксперимент"), value: S.settings.explore, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("explore", v); } }) : null,
         h("label", { className: "wave-slider" },
           h("span", { className: "wave-slider-label" }, T("Язык")),
           h("select", {
@@ -1614,6 +1790,49 @@ function WaveApp() {
             h("option", { value: "en" }, "English")
           )
         ),
+        adv ? h("label", { className: "wave-toggle" },
+          h("input", {
+            type: "checkbox",
+            checked: !!morning.enabled,
+            onChange: function (e) { setMorning("enabled", e.target.checked); }
+          }),
+          T("Утренняя волна по расписанию")
+        ) : null,
+        adv && morning.enabled ? h("label", { className: "wave-slider" },
+          h("span", { className: "wave-slider-label" }, T("Время")),
+          h("input", {
+            type: "time",
+            className: "wave-input wave-time",
+            value: morning.time,
+            onChange: function (e) { setMorning("time", e.target.value); }
+          })
+        ) : null,
+        adv && morning.enabled ? h("label", { className: "wave-slider" },
+          h("span", { className: "wave-slider-label" }, T("Настроение")),
+          h("select", {
+            className: "wave-input wave-select",
+            value: morning.mood || "calm",
+            onChange: function (e) { setMorning("mood", e.target.value); }
+          },
+            h("option", { value: "calm" }, T("Спокойное")),
+            h("option", { value: "slow" }, T("Медленное")),
+            h("option", { value: "focus" }, T("Фокус")),
+            h("option", { value: "mid" }, T("Среднее")),
+            h("option", { value: "energetic" }, T("Энергичное")),
+            h("option", { value: "fast" }, T("Быстрое")),
+            h("option", { value: "any" }, T("Любое"))
+          )
+        ) : null,
+        adv && morning.enabled ? h("label", { className: "wave-toggle" },
+          h("input", {
+            type: "checkbox",
+            checked: !!morning.weekdays,
+            onChange: function (e) { setMorning("weekdays", e.target.checked); }
+          }),
+          T("Только по будням")
+        ) : null,
+        adv && morning.enabled ? h("div", { className: "wave-hint" },
+          T("Пока Spotify открыт. Волна не запустится сама — покажем кнопку.")) : null,
         h("label", { className: "wave-toggle" },
           h("input", {
             type: "checkbox",
@@ -1630,11 +1849,11 @@ function WaveApp() {
           }),
           h("span", null, T("Автопродление — добирать треки, когда волна заканчивается"))
         ),
-        h("div", { className: "wave-known" },
+        adv ? h("div", { className: "wave-known" },
           h("span", null, S.knownCount ? T("Исключено знакомых треков: ") + S.knownCount : T("Список знакомых треков соберётся при первой генерации")),
           h("button", { className: "wave-link", onClick: refreshKnown }, T("обновить"))
-        ),
-        h("div", { className: "wave-scrobble" },
+        ) : null,
+        adv ? h("div", { className: "wave-scrobble" },
           h("label", { className: "wave-toggle" },
             h("input", {
               type: "checkbox",
@@ -1654,8 +1873,8 @@ function WaveApp() {
             h("button", { className: "wave-btn small", onClick: checkScrobble }, T("Проверить"))
           ),
           h("div", { className: "wave-hint" }, T("Токен: listenbrainz.org/settings → API token. Учитываются треки, дослушанные хотя бы наполовину."))
-        ),
-        h("div", { className: "wave-scrobble" },
+        ) : null,
+        adv ? h("div", { className: "wave-scrobble" },
           h("div", { className: "wave-scrobble-row" },
             h("button", { className: "wave-btn small", onClick: exportState }, T("Экспорт данных")),
             h("label", { className: "wave-btn small wave-label-btn" },
@@ -1672,7 +1891,9 @@ function WaveApp() {
             )
           ),
           h("div", { className: "wave-hint" }, T("Профиль вкуса, история и настройки — в JSON"))
-        )
+        ) : null,
+        adv ? null : h("div", { className: "wave-hint" },
+          T("Больше настроений и тонких настроек — в режиме «Подробно»."))
       ) : null
     ),
 
