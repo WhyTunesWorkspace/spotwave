@@ -31,8 +31,10 @@ How it works:
   native next/prev/shuffle/queue work. The obvious queue API approach silently drops items.
 
 Features: waves from likes / playlists / tracks / artists / albums, "only new" filter,
-BPM mood presets, auto-extend, why-this-track reasons, stats, export/import of the profile,
-optional ListenBrainz scrobbling, RU/EN UI.
+BPM mood presets (calm, sad, mid, energetic, plus slow/focus/fast), simple and advanced
+settings, five one-click presets with shareable `SW1.` codes, scheduled morning wave (a
+prompt, not autoplay), auto-extend, why-this-track reasons, stats, export/import of the
+profile, optional ListenBrainz scrobbling, RU/EN UI.
 
 Install (Spotify desktop + Spicetify required):
 
@@ -54,7 +56,8 @@ what breaks on your setup is very welcome.
 
 Built as a Spicetify app. Learns from skips, builds waves from your playlists, tracks, artists
 or albums, filters out what you already know, and plays as a real playlist context so the
-native controls work. RU/EN, MIT.
+native controls work. New in 0.7: simple/advanced settings, sad mood, a scheduled morning
+wave that waits for a click, and presets you can share as an `SW1.` code. RU/EN, MIT.
 
 → https://github.com/WhyTunesWorkspace/spotwave
 
@@ -72,6 +75,21 @@ Listed since 2026-11-19. How it works, verified in the Marketplace source:
 When updating the card: edit the root `manifest.json` or replace
 `docs/marketplace-preview.png` and push to `main`. GitHub's topic search and the raw CDN each
 cache for a few minutes.
+
+## Telegram blurb (RU)
+
+**spotwave — бесконечное персональное радио внутри Spotify.**
+
+Приложение для Spicetify: волна собирается из лайков, плейлистов, трека, артиста или
+альбома, учится на скипах, фильтрует знакомое и играется как обычный плейлист — штатные
+next/prev и очередь работают. Без API-ключей и Premium-API, аккаунт может быть free.
+
+Что нового в 0.7: режимы «Просто/Подробно», грустное настроение, утренняя волна по
+расписанию (показывает кнопку, сама не включает музыку) и пресеты, которыми можно
+поделиться кодом `SW1.`.
+
+Репозиторий: https://github.com/WhyTunesWorkspace/spotwave (MIT)
+Установка — одной строкой из README; в Spicetify Marketplace: Apps → spotwave.
 
 ## Posting checklist
 
