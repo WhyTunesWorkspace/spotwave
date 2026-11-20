@@ -1,6 +1,22 @@
 # Telegram channel
 
-A dedicated channel for spotwave (not the personal one).
+**Live:** https://t.me/whyspotwave (`-1004277220561`, channel "spotwave").
+
+## What is already done
+
+- Pinned intro post (installation, what the channel is for).
+- Release post for 0.7.0.
+- "How it works" post: internal APIs, BPM/key instead of audio features, playlist context.
+
+## What only the Telegram client can set
+
+The CLI has no method for chat settings, so these two are manual in the channel profile:
+
+- **Description:**
+
+  > Бесконечное персональное радио внутри Spotify. Приложение для Spicetify: волны из лайков, плейлистов, треков и артистов, обучение на скипах, утренние волны и пресеты. RU/EN. Без API-ключей и Premium-API.
+
+- **Avatar:** `docs/brand/app-icon-512.png`.
 
 ## Create it (once, ~1 minute)
 
