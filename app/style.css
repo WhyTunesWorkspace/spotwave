@@ -160,7 +160,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin-bottom: 14px;
 }
 
@@ -171,7 +172,7 @@
   letter-spacing: -0.02em;
 }
 
-.wave-links { display: flex; gap: 18px; }
+.wave-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 
 .wave-head-right {
   display: flex;
@@ -262,6 +263,7 @@
   margin-top: 18px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 12px;
   padding: 18px 20px;
   border-radius: 8px;
@@ -273,11 +275,21 @@
   align-items: center;
   gap: 12px;
   min-height: 28px;
+  min-width: 0;
   font-size: 12px;
   color: var(--wave-sub);
 }
 
-.wave-slider-label { flex: 0 0 128px; color: var(--wave-text); font-size: 13px; }
+/* Labels must never overlap the control: clamp them and ellipsize instead. */
+.wave-slider-label {
+  flex: 0 0 128px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--wave-text);
+  font-size: 13px;
+}
 .wave-slider-value { flex: 0 0 30px; text-align: right; color: var(--wave-text); font-variant-numeric: tabular-nums; }
 
 .wave-slider input[type="range"] {
@@ -594,4 +606,5 @@
   .wave-row-actions { opacity: 1; }
   .wave-row-dur { display: none; }
   .wave-slider-label { flex-basis: 96px; }
+  .wave-slider .wave-select { flex: 1 1 140px; width: auto; }
 }

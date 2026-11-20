@@ -3,6 +3,18 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.5.2] — 2026-11-20
+
+### Fixed
+
+- Track reasons are stored as source descriptors and translated at render time, so the wave
+  queue follows a language switch instead of keeping the old strings. Seed waves ("по треку
+  «…»") do the same; existing saved waves keep their text.
+- Settings labels can no longer collide with controls: single-line labels ellipsize, and the
+  section header wraps instead of overlapping its links on narrow windows.
+- Copy: the known-tracks counter now reads "Исключено знакомых треков" / "Known tracks
+  excluded".
+
 ## [0.5.1] — 2026-11-20
 
 ### Added

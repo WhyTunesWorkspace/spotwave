@@ -193,7 +193,7 @@ var I18N = {
       "Only new — skip tracks from my playlists and liked songs",
     "Автопродление — добирать треки, когда волна заканчивается":
       "Auto-extend — keep adding tracks as the wave ends",
-    "Исключаю знакомых треков: ": "Excluding known tracks: ",
+    "Исключено знакомых треков: ": "Known tracks excluded: ",
     "Список знакомых треков соберётся при первой генерации": "Known tracks will be collected on the first run",
     "обновить": "refresh",
     "Скробблить в ListenBrainz — история и рекомендации вне Spotify":
@@ -281,6 +281,23 @@ function T(s) {
   if (LANG_CACHE === "ru") return s;
   var v = I18N.en[s];
   return v == null ? s : v;
+}
+
+// Track pick reasons are stored as descriptors ({kind, name, type}) so they follow
+// the current UI language. Old saved waves keep their string and pass through.
+function reasonText(r) {
+  if (!r) return "";
+  if (typeof r === "string") return r;
+  if (r.kind === "liked") return T("из твоих лайков");
+  if (r.kind === "playlist") return T("из «") + (r.name || "") + "»";
+  if (r.kind === "any") return T("подобрано для тебя");
+  if (r.kind === "seed") {
+    var name = r.name || "";
+    if (r.type === "artist") return name ? T("по артисту «") + name + "»" : T("по артисту");
+    if (r.type === "album") return name ? T("по альбому «") + name + "»" : T("по альбому");
+    return name ? T("по треку «") + name + "»" : T("по треку");
+  }
+  return "";
 }
 var saveTimer = null;
 function persist() {
@@ -832,15 +849,17 @@ async function generate(sourceUris, opts) {
   pool.forEach(function (t) { t._score = scoreTrack(t, opts); });
   var chosen = pickTracks(pool, opts);
 
-  var labels = {};
-  labels[api.likedContext()] = T("из твоих лайков");
+  // Store a descriptor, not a translated string: the UI language can change
+  // long after the wave was built, and reasons must follow it.
+  var reasons = {};
+  reasons[api.likedContext()] = { kind: "liked" };
   try {
     var pls = await api.playlists();
-    pls.forEach(function (p) { labels[p.uri] = T("из «") + p.name + "»"; });
+    pls.forEach(function (p) { reasons[p.uri] = { kind: "playlist", name: p.name }; });
   } catch (e) {}
 
   chosen.forEach(function (t) {
-    t.reason = (opts.labels && opts.labels[t._src]) || labels[t._src] || T("подобрано для тебя");
+    t.reason = (opts.reasons && opts.reasons[t._src]) || reasons[t._src] || { kind: "any" };
     delete t._src;
     delete t._score;
   });
@@ -1157,7 +1176,7 @@ function TrackRow(props) {
       h("div", { className: "wave-row-title", title: t.name }, t.name),
       h("div", { className: "wave-row-sub", title: artists },
         artists,
-        t.reason ? h("span", { className: "wave-row-reason" }, " · " + t.reason) : null
+        t.reason ? h("span", { className: "wave-row-reason" }, " · " + reasonText(t.reason)) : null
       )
     ),
     t.bpm ? h("div", { className: "wave-row-bpm", title: T("Темп") }, String(t.bpm)) : null,
@@ -1334,19 +1353,23 @@ function WaveApp() {
     try {
       var uris = [];
       var label = "";
+      var seedName = "";
 
       if (seed.type === "artist") {
         var info = await api.artistTopTracks(seed.uri);
         uris = info.uris;
+        seedName = info.name || "";
         label = info.name ? T("по артисту «") + info.name + "»" : T("по артисту");
       } else if (seed.type === "album") {
         var album = await api.albumTracks(seed.uri);
         uris = album.uris;
+        seedName = album.name || "";
         label = album.name ? T("по альбому «") + album.name + "»" : T("по альбому");
       } else {
         uris = [seed.uri];
         var meta = await api.trackInfo(seed.uri);
         if (meta) rememberMeta([{ uri: seed.uri, name: meta.name, artists: meta.artists }]);
+        seedName = (meta && meta.name) || "";
         label = meta && meta.name ? T("по треку «") + meta.name + "»" : T("по треку");
       }
 
@@ -1356,8 +1379,8 @@ function WaveApp() {
       var tempUri = await api.seedPlaylist(uris.map(function (u) { return { uri: u }; }));
 
       var opts = buildOpts();
-      opts.labels = {};
-      opts.labels[tempUri] = label;
+      opts.reasons = {};
+      opts.reasons[tempUri] = { kind: "seed", type: seed.type, name: seedName };
 
       var tracks = await generate([tempUri], opts);
       if (!tracks.length) throw new Error(T("Не удалось собрать волну по этому seed"));
@@ -1371,6 +1394,7 @@ function WaveApp() {
         liveUri: liveUri,
         seedType: seed.type,
         seedUri: seed.uri,
+        seedName: seedName,
         seedLabel: label
       };
       persist(); notify();
@@ -1484,7 +1508,11 @@ function WaveApp() {
         h("div", { className: "wave-header-meta" },
           wave.length
             ? [
-                (S.wave && S.wave.seedLabel) ? T("Волна ") + S.wave.seedLabel : null,
+                (S.wave && (S.wave.seedType || S.wave.seedLabel))
+                  ? T("Волна ") + (S.wave.seedType
+                      ? reasonText({ kind: "seed", type: S.wave.seedType, name: S.wave.seedName || "" })
+                      : S.wave.seedLabel)
+                  : null,
                 wave.length + T(" треков"),
                 totalDurationText(totalMs)
               ].filter(Boolean).join(" · ")
@@ -1603,7 +1631,7 @@ function WaveApp() {
           h("span", null, T("Автопродление — добирать треки, когда волна заканчивается"))
         ),
         h("div", { className: "wave-known" },
-          h("span", null, S.knownCount ? T("Исключаю знакомых треков: ") + S.knownCount : T("Список знакомых треков соберётся при первой генерации")),
+          h("span", null, S.knownCount ? T("Исключено знакомых треков: ") + S.knownCount : T("Список знакомых треков соберётся при первой генерации")),
           h("button", { className: "wave-link", onClick: refreshKnown }, T("обновить"))
         ),
         h("div", { className: "wave-scrobble" },
