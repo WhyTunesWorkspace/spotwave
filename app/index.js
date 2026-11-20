@@ -167,6 +167,20 @@ var I18N = {
     "Больше настроений в подробном режиме": "More moods in advanced mode",
     "Больше настроений и тонких настроек — в режиме «Подробно».":
       "More moods and fine-tuning live in Advanced mode.",
+    "Пресеты": "Presets",
+    "Утро": "Morning",
+    "Грусть": "Sad",
+    "Вечер": "Evening",
+    "Дорога": "Road",
+    "Пресет применён — собери новую волну": "Preset applied - build a new wave",
+    "Код пресета: SW1.…": "Preset code: SW1.…",
+    "Применить": "Apply",
+    "Поделиться текущими": "Share current",
+    "Код скопирован в буфер": "Code copied to clipboard",
+    "Скопировать не удалось — код в поле": "Copy failed - the code is in the field",
+    "Это не похоже на код пресета": "That does not look like a preset code",
+    "Код копируется в буфер — его можно отправить другу.":
+      "The code goes to your clipboard - send it to a friend.",
     "Доброе утро. Собрать утреннюю волну?": "Good morning. Build your morning wave?",
     "Собрать": "Build",
     "Позже": "Later",
@@ -387,7 +401,6 @@ function moodRange(mood) {
 }
 
 /* ------------------------------ morning wave ------------------------------ */
-
 function pad2(n) { return (n < 10 ? "0" : "") + n; }
 
 function dayKey(d) {
@@ -410,6 +423,92 @@ function minutesNow(d) {
 function isWeekend(d) {
   d = d || new Date();
   return d.getDay() === 0 || d.getDay() === 6;
+}
+
+/* ------------------------------ presets ------------------------------ */
+
+var PRESET_PREFIX = "SW1.";
+
+// Curated starting points. `presets/` in the repo documents the same values
+// so people can copy them into their own files or share a code.
+var PRESETS = [
+  { id: "morning", mood: "calm", novelty: 0.45, explore: 0.30, diversity: 2, length: 30, onlyNew: true, autoExtend: true },
+  { id: "sad", mood: "sad", novelty: 0.50, explore: 0.35, diversity: 2, length: 25, onlyNew: true, autoExtend: true },
+  { id: "focus", mood: "focus", novelty: 0.20, explore: 0.15, diversity: 1, length: 40, onlyNew: true, autoExtend: true },
+  { id: "evening", mood: "slow", novelty: 0.55, explore: 0.45, diversity: 3, length: 30, onlyNew: true, autoExtend: true },
+  { id: "road", mood: "energetic", novelty: 0.50, explore: 0.50, diversity: 2, length: 40, onlyNew: false, autoExtend: true }
+];
+
+function presetTitle(id) {
+  if (id === "morning") return "Утро";
+  if (id === "sad") return "Грусть";
+  if (id === "focus") return "Фокус";
+  if (id === "evening") return "Вечер";
+  return "Дорога";
+}
+
+function presetActive(p) {
+  var s = S.settings;
+  return (s.mood || "any") === p.mood
+    && Math.abs((s.novelty || 0) - p.novelty) < 0.03
+    && Math.abs((s.explore || 0) - p.explore) < 0.03
+    && (s.diversity || 2) === p.diversity
+    && (s.length || 30) === p.length
+    && !!s.onlyNew === !!p.onlyNew
+    && (s.autoExtend !== false) === (p.autoExtend !== false);
+}
+
+function presetNum(value, fallback, lo, hi) {
+  var n = Number(value);
+  return isFinite(n) ? clamp(n, lo, hi) : fallback;
+}
+
+function base64UrlEncode(text) {
+  return btoa(unescape(encodeURIComponent(text)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlDecode(text) {
+  var s = String(text).replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  return decodeURIComponent(escape(atob(s)));
+}
+
+// Settings -> "SW1.eyJtb29kIjoi..." (base64url JSON, versioned prefix).
+function encodePreset(settings) {
+  return PRESET_PREFIX + base64UrlEncode(JSON.stringify({
+    v: 1,
+    mood: settings.mood || "any",
+    novelty: settings.novelty,
+    explore: settings.explore,
+    diversity: settings.diversity,
+    length: settings.length,
+    onlyNew: !!settings.onlyNew,
+    autoExtend: settings.autoExtend !== false
+  }));
+}
+
+// Unknown/garbage codes return null; values are clamped to the UI ranges.
+function decodePreset(code) {
+  var m = /^SW1\.([A-Za-z0-9_-]+)$/.exec(String(code || "").trim());
+  if (!m) return null;
+  try {
+    var raw = JSON.parse(base64UrlDecode(m[1]));
+    if (!raw || typeof raw !== "object") return null;
+    var moods = { any: 1, calm: 1, sad: 1, slow: 1, focus: 1, mid: 1, energetic: 1, fast: 1 };
+    if (raw.mood && !moods[raw.mood]) return null;
+    return {
+      mood: raw.mood || "any",
+      novelty: presetNum(raw.novelty, 0.45, 0, 1),
+      explore: presetNum(raw.explore, 0.35, 0, 1),
+      diversity: Math.round(presetNum(raw.diversity, 2, 1, 5)),
+      length: Math.round(presetNum(raw.length, 30, 10, 60)),
+      onlyNew: raw.onlyNew !== false,
+      autoExtend: raw.autoExtend !== false
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 function buildOpts(length) {
@@ -1321,6 +1420,8 @@ function WaveApp() {
   var showStats = statsPair[0], setShowStats = statsPair[1];
   var filterPair = React.useState("");
   var filter = filterPair[0], setFilter = filterPair[1];
+  var codePair = React.useState("");
+  var presetCode = codePair[0], setPresetCode = codePair[1];
 
   var likedUri = api.likedContext();
   var allSources = [{ uri: likedUri, name: T("Мой микс"), icon: "\u2726" }].concat(
@@ -1346,6 +1447,55 @@ function WaveApp() {
     S.settings[key] = value;
     LANG_CACHE = null;
     persist(); notify();
+  }
+
+  // Batch update: one persist + one render for presets.
+  function applySettings(values) {
+    Object.keys(values).forEach(function (k) { S.settings[k] = values[k]; });
+    LANG_CACHE = null;
+    persist(); notify();
+  }
+
+  function applyPreset(preset, name) {
+    applySettings({
+      mood: preset.mood,
+      novelty: preset.novelty,
+      explore: preset.explore,
+      diversity: preset.diversity,
+      length: preset.length,
+      onlyNew: preset.onlyNew,
+      autoExtend: preset.autoExtend
+    });
+    Spicetify.showNotification(T("Пресет применён — собери новую волну") + (name ? ": " + name : ""));
+  }
+
+  function sharePreset() {
+    var code = encodePreset(S.settings);
+    setPresetCode(code);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function () {
+          Spicetify.showNotification(T("Код скопирован в буфер"));
+        }).catch(function () {
+          Spicetify.showNotification(T("Скопировать не удалось — код в поле"));
+        });
+      } else {
+        throw new Error("clipboard unavailable");
+      }
+    } catch (e) {
+      Spicetify.showNotification(T("Скопировать не удалось — код в поле"));
+    }
+  }
+
+  function importPreset(code) {
+    var preset = decodePreset(code);
+    if (!preset) {
+      Spicetify.showNotification(T("Это не похоже на код пресета"), true);
+      return;
+    }
+    applySettings(preset);
+    setPresetCode(encodePreset(preset));
+    Spicetify.showNotification(T("Пресет применён — собери новую волну"));
   }
 
   function refreshKnown() {
@@ -1808,6 +1958,33 @@ function WaveApp() {
             })
           )
         ),
+        h("div", { className: "wave-presets" },
+          h("span", { className: "wave-mood-label" }, T("Пресеты")),
+          h("div", { className: "wave-chips" },
+            PRESETS.map(function (preset) {
+              return h("button", {
+                key: preset.id,
+                className: "wave-chip" + (presetActive(preset) ? " on" : ""),
+                onClick: function () { applyPreset(preset, T(presetTitle(preset.id))); }
+              }, T(presetTitle(preset.id)));
+            })
+          )
+        ),
+        adv ? h("div", { className: "wave-share" },
+          h("div", { className: "wave-share-row" },
+            h("input", {
+              className: "wave-input",
+              placeholder: T("Код пресета: SW1.…"),
+              value: presetCode,
+              onChange: function (e) { setPresetCode(e.target.value); }
+            }),
+            h("button", { className: "wave-btn small", onClick: function () { importPreset(presetCode); } }, T("Применить"))
+          ),
+          h("div", { className: "wave-share-row" },
+            h("button", { className: "wave-btn small", onClick: sharePreset }, T("Поделиться текущими")),
+            h("span", { className: "wave-hint" }, T("Код копируется в буфер — его можно отправить другу."))
+          )
+        ) : null,
         adv ? h(Slider, { label: T("Новизна"), value: S.settings.novelty, min: 0, max: 1, step: 0.05, onChange: function (v) { setSetting("novelty", v); } }) : null,
         adv ? h(Slider, { label: T("Разнообразие"), value: S.settings.diversity, min: 1, max: 5, step: 1, onChange: function (v) { setSetting("diversity", v); } }) : null,
         h(Slider, { label: T("Длина"), value: S.settings.length, min: 10, max: 60, step: 5, onChange: function (v) { setSetting("length", v); } }),

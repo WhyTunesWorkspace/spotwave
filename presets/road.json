@@ -1,0 +1,13 @@
+{
+  "name": "Road",
+  "description": "Energetic queue that can repeat the tracks you already love.",
+  "settings": {
+    "mood": "energetic",
+    "novelty": 0.5,
+    "explore": 0.5,
+    "diversity": 2,
+    "length": 40,
+    "onlyNew": false,
+    "autoExtend": true
+  }
+}

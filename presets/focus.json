@@ -1,0 +1,13 @@
+{
+  "name": "Focus",
+  "description": "One artist at a time, few surprises, long queue.",
+  "settings": {
+    "mood": "focus",
+    "novelty": 0.2,
+    "explore": 0.15,
+    "diversity": 1,
+    "length": 40,
+    "onlyNew": true,
+    "autoExtend": true
+  }
+}

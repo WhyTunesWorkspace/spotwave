@@ -399,6 +399,20 @@
 
 .wave-time { flex: 0 0 120px; width: 120px; }
 
+.wave-presets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.wave-presets .wave-chips { flex: 1 1 auto; }
+
+.wave-share { display: flex; flex-direction: column; gap: 8px; }
+.wave-share-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.wave-share-row .wave-input { flex: 1 1 260px; }
+.wave-share-row .wave-hint { flex: 1 1 100%; margin: 0; }
+
 .wave-morning-bar {
   display: flex;
   align-items: center;

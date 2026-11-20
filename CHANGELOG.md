@@ -3,6 +3,16 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.7.0] — 2026-11-20
+
+### Added
+
+- **Presets**: Morning, Sad, Focus, Evening and Road in the settings panel — one click applies
+  mood, novelty, exploration, diversity, length and the two queue flags.
+- **Shareable preset codes**: "Share current" copies an `SW1.` code (versioned base64url JSON)
+  and "Apply" restores settings from a pasted code. Nothing leaves the machine.
+- `presets/` in the repository documents the built-in values and the format.
+
 ## [0.6.1] — 2026-11-20
 
 ### Added

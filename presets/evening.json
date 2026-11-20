@@ -1,0 +1,13 @@
+{
+  "name": "Evening",
+  "description": "Slow, wider artist range, a bit more randomness.",
+  "settings": {
+    "mood": "slow",
+    "novelty": 0.55,
+    "explore": 0.45,
+    "diversity": 3,
+    "length": 30,
+    "onlyNew": true,
+    "autoExtend": true
+  }
+}

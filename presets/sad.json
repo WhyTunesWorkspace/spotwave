@@ -1,0 +1,13 @@
+{
+  "name": "Sad",
+  "description": "Low tempo, minor keys, room for a moody evening.",
+  "settings": {
+    "mood": "sad",
+    "novelty": 0.5,
+    "explore": 0.35,
+    "diversity": 2,
+    "length": 25,
+    "onlyNew": true,
+    "autoExtend": true
+  }
+}

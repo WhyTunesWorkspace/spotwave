@@ -5,7 +5,7 @@ Updated: 2026-11-19
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.6.1** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.7.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 
@@ -56,7 +56,8 @@ Next steps:
 3. ~~Pinned feedback issue~~ created after the 0.5.1 release.
 4. ~~Scheduled morning wave~~ done in v0.6.0: prompt bar, no autoplay; simple/advanced
    settings with extra mood presets.
-5. Next feature: shared presets and community mood packs.
+5. ~~Shared presets~~ done in v0.7.0: five built-ins, `SW1.` share codes, `presets/` docs.
+6. Next: launch/promotion, then the optional local server for a phone.
 
 ## Commands
 

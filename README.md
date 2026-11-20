@@ -34,6 +34,7 @@ personal radio with skip learning.
 | **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
 | **Mood presets** | Calm / Sad / Mid / Energetic, plus Slow / Focus / Fast in advanced mode — filtered by BPM (Sad also prefers minor keys) |
 | **Morning wave** | a scheduled calm wave: at the set time the app shows a "build it?" button (nothing autoplays) |
+| **Presets** | five built-in mood packs (Morning, Sad, Focus, Evening, Road) and a shareable code for your own |
 | **Simple / Advanced settings** | two modes of the settings panel: essentials by default, every knob in advanced |
 | **Auto-extend** | adds more tracks as the wave runs out |
 | **Skip learning** | a background extension records plays and skips even when the tab is closed |
@@ -117,6 +118,7 @@ switchable in Settings).
 | Mood | BPM filter: calm / sad / mid / energetic / any, plus slow / focus / fast in advanced mode |
 | Morning wave | schedule a calm wave; at that time a "build it?" button appears, nothing autoplays |
 | Simple / Advanced | switch the settings panel between essentials and every knob |
+| Presets | one-click starting points, plus a `SW1.` code to share your own (see [presets/](presets/)) |
 | Auto-extend | top up the queue when the wave ends |
 | Language | auto / Russian / English |
 
@@ -191,9 +193,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [x] Skip learning, mood presets, auto-extend
 - [x] Morning wave on a schedule (prompt, not autoplay)
 - [x] Simple / Advanced settings modes
+- [x] Shared presets and community mood packs
 - [x] Bilingual UI, native redesign, brand identity
 - [x] Spicetify Marketplace listing
-- [ ] Shared presets and community mood packs
 - [ ] Optional local server for generating from a phone
 
 ## Brand

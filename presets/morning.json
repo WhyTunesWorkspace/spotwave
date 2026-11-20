@@ -1,0 +1,13 @@
+{
+  "name": "Morning",
+  "description": "Calm, familiar-leaning radio for the first hour of the day.",
+  "settings": {
+    "mood": "calm",
+    "novelty": 0.45,
+    "explore": 0.3,
+    "diversity": 2,
+    "length": 30,
+    "onlyNew": true,
+    "autoExtend": true
+  }
+}
