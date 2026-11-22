@@ -8,27 +8,33 @@
 - Release post for 0.7.0.
 - "How it works" post: internal APIs, BPM/key instead of audio features, playlist context.
 
-## What only the Telegram client can set
+## Channel settings (applied 2026-11-22)
 
-The CLI has no method for chat settings, so these two are manual in the channel profile:
+The CLI has no dedicated command for chat settings, but TDLib is reachable through
+`telegram-agent eval`, so both are set from the terminal:
 
-- **Description:**
+- **Description** (203 chars):
 
   > Бесконечное персональное радио внутри Spotify. Приложение для Spicetify: волны из лайков, плейлистов, треков и артистов, обучение на скипах, утренние волны и пресеты. RU/EN. Без API-ключей и Premium-API.
 
-- **Avatar:** `docs/brand/app-icon-512.png`.
+- **Avatar:** `docs/brand/app-icon-512.png` via `setChatPhoto` + `inputChatPhotoStatic`.
 
-## Create it (once, ~1 minute)
+Notes:
 
-1. Telegram → **New Channel**.
-2. Name: `spotwave`.
-3. Description (RU, 255 chars max):
+- `eval` receives code as an argv string, so PowerShell mangles quotes and Cyrillic.
+  Write the code to a UTF-8 `.js` file and use `eval --file`, or inline only ASCII with
+  single quotes.
+- `getChat` in this TDLib build does not return `description`; read it with
+  `telegram-agent info <chat>` instead.
+- Channel photo changes leave a `chatchangephoto` service message in the channel — expected.
 
-   > Бесконечное персональное радио внутри Spotify. Приложение для Spicetify: волны из лайков, плейлистов, треков и артистов, обучение на скипах, утренние волны и пресеты. RU/EN. Без API-ключей и Premium-API.
+## Media
 
-4. Public username: `@spotwave_app` (если занят — `@spotwave_radio`, `@spotwave_ru`).
-5. Avatar: `docs/brand/app-icon-512.png`.
-6. Tell me the `@username` — the rest I can post and pin myself from this account.
+Text posts go through `action send`. Files are not covered by the CLI's send path, so
+attach them from the client.
+
+Planned: a short screen recording of building a wave (GIF), 2–3 stills of the app in
+EN and RU, and the brand card `docs/marketplace-preview.png` for the pinned post.
 
 ## Pinned intro post
 
