@@ -257,6 +257,10 @@ spicetify restore
 
 ---
 
+## Сообщество
+
+- Telegram: [@whyspotwave](https://t.me/whyspotwave) — релизы, заметки о том, как всё устроено, ответы на вопросы.
+
 ## Бренд
 
 <img src="docs/brand/app-icon-512.png" width="64" align="right" alt="spotwave icon">

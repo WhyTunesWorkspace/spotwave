@@ -198,6 +198,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [x] Spicetify Marketplace listing
 - [ ] Optional local server for generating from a phone
 
+## Community
+
+- Telegram: [@whyspotwave](https://t.me/whyspotwave) — releases, notes on how it works, questions.
+
 ## Brand
 
 <img src="docs/brand/app-icon-512.png" width="64" align="right" alt="spotwave icon">
