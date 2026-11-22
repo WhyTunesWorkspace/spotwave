@@ -14,7 +14,7 @@ Updated: 2026-11-22
 - Spicetify custom app (`app/`) + startup extension (`app/extension.js`).
 - Waves from: liked songs, playlists, track, artist, album.
 - Skip learning, "only new", BPM moods (calm/mid/energetic), auto-extend, reasons, stats.
-- Playback via a service playlist `Р’РѕР»РЅР° В· Live` (native next/prev/shuffle/queue).
+- Playback via a service playlist `Волна · Live` (native next/prev/shuffle/queue).
 - Export/import profile JSON; optional ListenBrainz scrobbling.
 - Bilingual UI (ru/en), native Spotify-style layout, brand identity (`docs/brand/`).
 - One-line installers (`scripts/install.ps1`, `scripts/install.sh`), package script, CI,
