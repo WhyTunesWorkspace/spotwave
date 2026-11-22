@@ -1,6 +1,6 @@
 ﻿# Project state (handoff)
 
-Updated: 2026-11-19
+Updated: 2026-11-22
 
 ## Repo
 
@@ -48,16 +48,27 @@ Verified after push: raw manifest 200, preview 200, `search/repositories?q=topic
 Note: `app/manifest.json` is the Spicetify runtime manifest (with `main`) and must stay separate
 from the root Marketplace manifest.
 
+## Telegram channel (live, 2026-11-20)
+
+- https://t.me/whyspotwave - channel id `-1004277220561`, title `spotwave`.
+- Posted: pinned intro, 0.7.0 release, "how it works without the official API".
+- Linked from `README.md` (Community) and `README.ru.md` (Сообщество), commit `fa1c453`.
+- Manual in the Telegram client only: channel description (text is in `docs/telegram.md`)
+  and avatar `docs/brand/app-icon-512.png`; the CLI has no chat-settings method.
+- Posting rules: one post per release, plus at most one tip per week (`docs/telegram.md`).
+
 Next steps:
 
 1. ~~Fresh screenshots~~ done in v0.5.1: `docs/screenshot.png` (English UI, My mix wave) and
    `docs/marketplace-preview.png` (1200², ink + icon + wordmark + UI card).
-2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN).
+2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN). **Not done** - needs
+   the owner's Habr / Hacker News accounts; copy is final and includes a Telegram blurb.
 3. ~~Pinned feedback issue~~ created after the 0.5.1 release.
 4. ~~Scheduled morning wave~~ done in v0.6.0: prompt bar, no autoplay; simple/advanced
    settings with extra mood presets.
 5. ~~Shared presets~~ done in v0.7.0: five built-ins, `SW1.` share codes, `presets/` docs.
-6. Next: launch/promotion, then the optional local server for a phone.
+6. ~~Telegram channel~~ live, 3 posts, intro pinned, linked from both READMEs.
+7. Next: launch/promotion, then the optional local server for a phone.
 
 ## Commands
 
