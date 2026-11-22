@@ -33,8 +33,20 @@ Notes:
 Text posts go through `action send`. Files are not covered by the CLI's send path, so
 attach them from the client.
 
-Planned: a short screen recording of building a wave (GIF), 2–3 stills of the app in
-EN and RU, and the brand card `docs/marketplace-preview.png` for the pinned post.
+Ready assets in `docs/media/` (captured 2026-11-22, 1440×900 @1x):
+
+| File | Content |
+|---|---|
+| `wave-ru.png` | Russian UI: 56-track wave, sources, moods, queue with BPM |
+| `wave-en.png` | English UI, morning wave, same layout |
+| `wave-presets.png` | Advanced settings: presets, `SW1.` code, sliders |
+
+Captured over CDP with `Emulation.setDeviceMetricsOverride` at
+`deviceScaleFactor: 2`, then halved with System.Drawing to keep the repo small.
+
+Still planned: a short screen recording (GIF) of building a wave, and the brand card
+`docs/marketplace-preview.png` for the pinned post. Files must be attached from the
+Telegram client — the CLI has no upload command.
 
 ## Pinned intro post
 
