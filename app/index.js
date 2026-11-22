@@ -600,6 +600,46 @@ var KNOWN_CACHE = null;
 var KNOWN_TTL = 6 * HOUR;
 var PLAYLIST_CACHE = { at: 0, list: [] };
 var PLAYLIST_TTL = 60 * 1000;
+var ROOTLIST_MAX_FOLDERS = 80;
+
+/* Запрос содержимого одной папки. Публичный getContents() аргумент не принимает,
+ * поэтому идём в клиент напрямую: у него в query есть folderUri. */
+var ROOTLIST_FOLDER_POLICY = {
+  playlist: { addTime: true, playlist: { rowId: true, link: true, name: true } },
+  folder: { addTime: true, folder: { rowId: true, link: true, name: true, rows: true } }
+};
+
+function rootlistNode(raw) {
+  if (!raw) return { type: "unknown", uri: "" };
+  if (raw.folder) {
+    var fm = raw.folder.folderMetadata || {};
+    return {
+      type: "folder",
+      uri: fm.link || "",
+      name: fm.name || "",
+      items: (raw.folder.item || []).map(rootlistNode)
+    };
+  }
+  if (raw.playlist) {
+    var pm = raw.playlist.playlistMetadata || {};
+    if (!pm.link || pm.deletedByOwner) return { type: "placeholder", uri: pm.link || "" };
+    return { type: "playlist", uri: pm.link, name: pm.name || "" };
+  }
+  return { type: "unknown", uri: "" };
+}
+
+async function rootlistChildren(uri) {
+  var client = PF.RootlistAPI && PF.RootlistAPI._rootlistDataClient;
+  if (!client || !client.get) return [];
+  try {
+    var r = await client.get({ query: { folderUri: uri }, policy: ROOTLIST_FOLDER_POLICY });
+    var root = r && r.data && r.data.root;
+    return ((root && root.item) || []).map(rootlistNode);
+  } catch (e) {
+    console.warn("[wave] folder contents failed", uri, e);
+    return [];
+  }
+}
 
 var api = {
   likedContext: function () {
@@ -611,13 +651,46 @@ var api = {
     if (!force && PLAYLIST_CACHE.list.length && now() - PLAYLIST_CACHE.at < PLAYLIST_TTL) {
       return PLAYLIST_CACHE.list;
     }
-    var r = await PF.RootlistAPI.getContents();
-    var items = (r && r.items) || [];
-    var list = items
-      .filter(function (i) { return i && i.type === "playlist" && i.uri && !i.isNotFound; })
-      .map(function (i) { return { uri: i.uri, name: i.name || T("Плейлист") }; });
+    var list = await api.rootlistPlaylists();
     PLAYLIST_CACHE = { at: now(), list: list };
     return list;
+  },
+
+  /* Корень — плоский список мини-объектов: плейлисты и папки. Папка приходит без
+   * содержимого (`type: "folder"`), поэтому рекурсивно заходим внутрь и собираем
+   * плейлисты со всех уровней; повторные uri отсекаются по первому вхождению. */
+  rootlistPlaylists: async function () {
+    var out = [];
+    var seen = {};
+
+    async function walk(items, depth, path, budget) {
+      var locals = items || [];
+      for (var i = 0; i < locals.length; i++) {
+        if (budget.left <= 0) return;
+        var it = locals[i];
+        if (!it) continue;
+        if (it.folder && it.folder.folderMetadata) it = rootlistNode(it);
+        if (it.type === "playlist" && it.uri && !it.isNotFound) {
+          if (seen[it.uri]) continue;
+          seen[it.uri] = 1;
+          out.push({ uri: it.uri, name: it.name || T("Плейлист"), folder: path || "", depth: depth });
+          continue;
+        }
+        if (it.type !== "folder") continue;
+        var here = it.name ? (path ? path + " / " + it.name : it.name) : path;
+        var kids = it.items || it.children || it.childrenItems || [];
+        // Некоторые клиенты отдают папки без содержимого — дочитываем по uri.
+        if (!kids.length && it.uri && depth < 3) {
+          budget.left--;
+          kids = await rootlistChildren(it.uri);
+        }
+        await walk(kids, depth + 1, here, budget);
+      }
+    }
+
+    var r = await PF.RootlistAPI.getContents();
+    await walk((r && r.items) || [], 0, "", { left: ROOTLIST_MAX_FOLDERS });
+    return out;
   },
 
   /* Для интерфейса: служебные плейлисты Волны не показываем как источники. */
@@ -1912,7 +1985,8 @@ function WaveApp() {
           return h("button", {
             key: s.uri,
             className: "wave-chip" + (on ? " on" : ""),
-            onClick: function () { toggleSource(s.uri); }
+            onClick: function () { toggleSource(s.uri); },
+            title: s.folder ? s.folder + " / " + s.name : s.name
           }, s.name);
         }),
         playlists.loading ? h("span", { className: "wave-muted" }, T("загружаю плейлисты…")) : null
@@ -2181,3 +2255,5 @@ try {
 } catch (e) {
   console.warn("[wave] auto-extend hook failed", e);
 }
+
+

@@ -29,7 +29,7 @@ personal radio with skip learning.
 | | |
 |---|---|
 | **My mix** | a wave built from your liked songs |
-| **Playlist waves** | pick one playlist for its mood, or several for a mix |
+| **Playlist waves** | pick one playlist for its mood, or several for a mix - playlists inside folders included |
 | **Track / artist / album waves** | right-click a track, an artist or an album → wave in its spirit |
 | **Only new** | excludes tracks from your playlists, liked songs and recent plays (URI + “title + artist” matching) |
 | **Mood presets** | Calm / Sad / Mid / Energetic, plus Slow / Focus / Fast in advanced mode — filtered by BPM (Sad also prefers minor keys) |

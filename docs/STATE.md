@@ -5,14 +5,14 @@ Updated: 2026-11-22
 ## Repo
 
 - **https://github.com/WhyTunesWorkspace/spotwave** (public, MIT)
-- Latest release: **v0.7.0** (auto-published by `.github/workflows/release.yml` on `v*` tags)
+- Latest release: **v0.7.1** (auto-published by `.github/workflows/release.yml` on `v*` tags)
 - Local working copy: `C:\Users\Administrator\wave`
 - Backups: `C:\Users\Administrator\wave-backup-2026-11-19.zip` (state + git bundle + config)
 
 ## What is done
 
 - Spicetify custom app (`app/`) + startup extension (`app/extension.js`).
-- Waves from: liked songs, playlists, track, artist, album.
+- Waves from: liked songs, playlists (root and inside folders), track, artist, album.
 - Skip learning, "only new", BPM moods (calm/mid/energetic), auto-extend, reasons, stats.
 - Playback via a service playlist `Волна · Live` (native next/prev/shuffle/queue).
 - Export/import profile JSON; optional ListenBrainz scrobbling.

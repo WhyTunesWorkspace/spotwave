@@ -3,6 +3,19 @@
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
 
+## [0.7.1] — 2026-11-22
+
+### Fixed
+
+- **Playlists inside folders are now sources.** The playlist list only read the root of the library,
+  so anything kept in a folder was invisible. Folders are now walked recursively (up to 3 levels,
+  80 folders per refresh) and their contents are fetched straight from the client rootlist
+  service, because `RootlistAPI.getContents()` ignores its arguments.
+
+### Changed
+
+- Playlist chips show the folder path in the tooltip (`Folder / Playlist`).
+
 ## [0.7.0] — 2026-11-20
 
 ### Added
