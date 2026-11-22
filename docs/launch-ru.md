@@ -101,6 +101,7 @@ curl -fsSL https://raw.githubusercontent.com/WhyTunesWorkspace/spotwave/main/scr
 ставится одной строкой скриптом выше.
 
 Репозиторий: https://github.com/WhyTunesWorkspace/spotwave
+Короткие заметки о проекте — в Telegram: https://t.me/whyspotwave
 
 ## Честные ограничения
 
