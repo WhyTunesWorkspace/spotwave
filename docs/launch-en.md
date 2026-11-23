@@ -56,8 +56,8 @@ what breaks on your setup is very welcome.
 
 Built as a Spicetify app. Learns from skips, builds waves from your playlists, tracks, artists
 or albums, filters out what you already know, and plays as a real playlist context so the
-native controls work. New in 0.7: simple/advanced settings, sad mood, a scheduled morning
-wave that waits for a click, and presets you can share as an `SW1.` code. RU/EN, MIT.
+native controls work. New in 0.8: a track-level "not this one" signal, fewer artist repeats
+inside a wave, and a time-of-day tempo tilt. RU/EN, MIT.
 
 → https://github.com/WhyTunesWorkspace/spotwave
 
