@@ -38,7 +38,7 @@ personal radio with skip learning.
 | **Simple / Advanced settings** | two modes of the settings panel: essentials by default, every knob in advanced |
 | **Auto-extend** | adds more tracks as the wave runs out |
 | **Skip learning** | a background extension records plays and skips even when the tab is closed |
-| **Manual feedback** | like (adds to Liked Songs), hide track for 45 days, mute artist |
+| **Manual feedback** | like (adds to Liked Songs), "not this one" (hides the track for 45 days, no artist penalty), mute artist |
 | **Pick reason** | every track shows where it came from |
 | **Stats** | plays, skips, completion, top artists, weekday/hour distribution, average tempo |
 | **Scrobbling** | optional ListenBrainz export |
@@ -115,6 +115,7 @@ switchable in Settings).
 | Length | tracks generated per run |
 | Exploration | amount of randomness |
 | Only new | exclude liked/playlists/recently played |
+| Time of day | with mood Any, the BPM tilt follows the clock (switch in settings) |
 | Mood | BPM filter: calm / sad / mid / energetic / any, plus slow / focus / fast in advanced mode |
 | Morning wave | schedule a calm wave; at that time a "build it?" button appears, nothing autoplays |
 | Simple / Advanced | switch the settings panel between essentials and every knob |
@@ -142,7 +143,7 @@ app/
   the same engine Spotify uses for playlist enhancements. Liked songs act as a playlist context.
   The client returns **BPM and key** along with tracks, which replaces the closed audio features.
 - **Filters** — bans, “only new”, mood BPM range, long tracks, slowed/remix/karaoke.
-- **Ranking** — artist affinity (completions + likes − skips) × freshness × novelty + exploration noise.
+- **Ranking** — artist affinity (completions and likes against skips), freshness, novelty, fewer artist repeats across the wave, a time-of-day tempo tilt and exploration noise.
 - **Selection** — greedy pick with a per-artist cap and no back-to-back repeats.
 - **Reason** — each track keeps its source (`from «Melancholy»`, `from your liked songs`, …).
 - **Playback** — rewrite `Волна · Live`, then `playUri` as a context.

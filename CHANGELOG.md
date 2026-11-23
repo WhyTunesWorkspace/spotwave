@@ -1,7 +1,24 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to spotwave are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: SemVer.
+
+## [0.8.0] - 2026-11-23
+
+### Added
+
+- **Time of day**: with mood any, the wave leans to the tempo of the clock: quiet at night (~85 BPM),
+  airy in the morning (~100), neutral in the day (~120), driving in the evening (~130). A switch in
+  settings turns it off; a chosen mood always wins.
+- Settings and feedback are saved immediately: the 250 ms debounce used to drop a click
+  when the tab was closed right after it.
+
+### Changed
+
+- **Not this one** (close button) is a track-level opinion now: the track is hidden for 45 days and
+  down-weighted later, without punishing the artist.
+- **Fewer artist repeats**: an artist already in the wave, or heard among the last picks, sinks lower
+  instead of only being blocked by the per-artist cap.
 
 ## [0.7.1] — 2026-11-22
 

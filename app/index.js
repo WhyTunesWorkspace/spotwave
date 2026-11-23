@@ -55,6 +55,7 @@ var DEFAULTS = {
     clean: false,
     onlyNew: true,
     mood: "any",
+    timeOfDay: true,
     autoExtend: true,
     scrobbleEnabled: false,
     scrobbleToken: "",
@@ -142,8 +143,8 @@ var I18N = {
     "Топ артистов": "Top artists",
     "пока нет данных — послушай волну": "no data yet — play the wave",
     "Нравится": "Like",
-    "Убрать из волны": "Remove from wave",
-    "Больше не этот артист": "Never this artist",
+    "Не это": "Not this one",
+    "Не этот артист": "Not this artist",
     "Играть": "Play",
     "Мой микс": "My mix",
     "Оставь хотя бы один источник": "Keep at least one source",
@@ -237,6 +238,7 @@ var I18N = {
     "Разнообразие": "Diversity",
     "Длина": "Length",
     "Эксперимент": "Exploration",
+    "Учитывать время суток — темп волны под часы дня": "Use the time of day - the wave tempo follows the clock",
     "Только новое — не брать треки из моих плейлистов и лайков":
       "Only new — skip tracks from my playlists and liked songs",
     "Автопродление — добирать треки, когда волна заканчивается":
@@ -348,6 +350,12 @@ function reasonText(r) {
   return "";
 }
 var saveTimer = null;
+// Write immediately on user actions: the debounce below saves 250ms
+// later, and a reload in that window loses the change.
+function persistNow() {
+  clearTimeout(saveTimer);
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {}
+}
 function persist() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function () {
@@ -511,6 +519,34 @@ function decodePreset(code) {
   }
 }
 
+/* ------------------------------ time of day ------------------------------ */
+
+// The chosen mood wins. When it is any, the BPM tilt follows the clock, so
+// the same source gives a quiet night wave and a driving evening one.
+var DAY_PARTS = [
+  { id: "night", from: 0, to: 5, center: 85 },
+  { id: "morning", from: 6, to: 11, center: 100 },
+  { id: "day", from: 12, to: 17, center: 120 },
+  { id: "evening", from: 18, to: 23, center: 130 }
+];
+
+function dayPart(d) {
+  var h = (d || new Date()).getHours();
+  for (var i = 0; i < DAY_PARTS.length; i++) {
+    if (h >= DAY_PARTS[i].from && h <= DAY_PARTS[i].to) return DAY_PARTS[i];
+  }
+  return DAY_PARTS[2];
+}
+
+// Soft tilt: at most +-0.45, and zero when a mood is already chosen.
+function timeTilt(bpm, opts, d) {
+  if (!opts.timeOfDay || !bpm) return 0;
+  if (opts.mood && opts.mood !== "any") return 0;
+  var part = dayPart(d);
+  var dist = Math.abs(Math.log(bpm / part.center));
+  return 0.45 * Math.max(-1, Math.min(1, 1 - dist * 3));
+}
+
 function buildOpts(length) {
   return {
     length: length || S.settings.length,
@@ -519,8 +555,9 @@ function buildOpts(length) {
     diversity: S.settings.diversity,
     clean: S.settings.clean,
     onlyNew: S.settings.onlyNew,
-    mood: S.settings.mood
-  };
+    mood: S.settings.mood,
+    timeOfDay: S.settings.timeOfDay !== false
+ };
 }
 
 function rememberMeta(tracks) {
@@ -948,6 +985,8 @@ function scoreTrack(t, opts) {
   if (tr) {
     if (tr.likes) score += 0.3;
     if (tr.skips) score -= 0.22 * Math.min(tr.skips, 3);
+    // Explicit "not this one" is a hard opinion, not a skip accident.
+    if (tr.notThis) score -= 1.2 * Math.min(tr.notThis, 2);
     if (tr.lastPlayed) {
       var hAge = (ts - tr.lastPlayed) / HOUR;
       if (hAge < 24) score -= 0.65;
@@ -962,11 +1001,22 @@ function scoreTrack(t, opts) {
   else if (/(remix|edit|flip)/.test(lname)) score -= 0.25;
   if (t.durationMs > 12 * 60000) score -= 0.4;
 
+  score += timeTilt(t.bpm, opts, new Date(ts));
+
   score += (Math.random() - 0.5) * (opts.explore || 0.3) * 2;
   return score;
 }
 
 function pickTracks(pool, opts) {
+  // Soft caps on top of the hard constraints: an artist already used in the
+  // wave, or heard in the previous picks, sinks instead of only being blocked.
+  var WAVE_ARTIST_PENALTY = 1.4;
+  var RECENT_PENALTY = 0.9;
+  var RECENT_SPAN = 5;
+
+  var seen = {};
+  pool.forEach(function (t) { var a = primaryArtist(t); seen[a] = (seen[a] || 0) + 1; });
+
   var sorted = pool.slice().sort(function (a, b) { return b._score - a._score; });
   var out = [];
   var perArtist = {};
@@ -976,19 +1026,25 @@ function pickTracks(pool, opts) {
   while (out.length < opts.length && sorted.length) {
     var chosen = null;
     var chosenIdx = 0;
+    var best = -Infinity;
     var windowSize = Math.min(sorted.length, 12);
-    var tries = Math.min(windowSize, 7);
 
-    for (var k = 0; k < tries; k++) {
+    for (var k = 0; k < windowSize; k++) {
       var cand = sorted[k];
       var key = primaryArtist(cand);
       var albumKey = (cand.album && cand.album.uri) || "";
       if ((perArtist[key] || 0) >= opts.diversity) continue;
       if (albumKey && (perAlbum[albumKey] || 0) >= 2) continue;
       if (key === lastArtist) continue;
-      chosen = cand;
-      chosenIdx = k;
-      break;
+
+      var weight = cand._score;
+      weight -= WAVE_ARTIST_PENALTY * (perArtist[key] || 0);
+      // The artist repeats in the pool: the novelty bonus is already spent.
+      if ((seen[key] || 0) > 1) weight -= 0.35 * WAVE_ARTIST_PENALTY;
+      for (var r = Math.max(0, out.length - RECENT_SPAN); r < out.length; r++) {
+        if (primaryArtist(out[r]) === key) { weight -= RECENT_PENALTY; break; }
+      }
+      if (weight > best) { best = weight; chosen = cand; chosenIdx = k; }
     }
 
     if (!chosen) { chosen = sorted[0]; chosenIdx = 0; }
@@ -1259,34 +1315,36 @@ function likeTrack(t) {
   }
   try { PF.LibraryAPI.add({ uris: [t.uri] }); } catch (e) {}
   Spicetify.showNotification(T("Волна запомнила: нравится"));
-  persist(); notify();
+  persistNow(); notify();
 }
 
+// "Not this one": a track-level signal. No artist penalty - one bad track
+// is not a bad artist; use "mute artist" for that.
 function dislikeTrack(t) {
   bumpTrack(t.uri, "skips");
-  trackArtists(t).forEach(function (a) { bumpArtist(a, "skips"); });
+  if (S.tracks[t.uri]) S.tracks[t.uri].notThis = (S.tracks[t.uri].notThis || 0) + 1;
   S.bans[t.uri] = { until: now() + 45 * DAY };
   if (S.wave && S.wave.tracks) {
     S.wave.tracks = S.wave.tracks.filter(function (x) { return x.uri !== t.uri; });
   }
   var cur = Spicetify.Player.data && Spicetify.Player.data.item;
   if (cur && cur.uri === t.uri) { try { Spicetify.Player.next(); } catch (e) {} }
-  persist(); notify();
+  Spicetify.showNotification(T("Волна не вернёт этот трек"));
+  persistNow(); notify();
 }
 
-function muteArtist(t) {
-  var uris = trackArtists(t);
-  uris.forEach(function (a) {
-    bumpArtist(a, "skips", 3);
-    S.artists[a].mutedAt = now();
-  });
+function muteArtist(uri) {
+  if (!uri) return;
+  bumpArtist(uri, "skips", 3);
+  S.artists[uri].mutedAt = now();
   if (S.wave && S.wave.tracks) {
     S.wave.tracks = S.wave.tracks.filter(function (x) {
-      return trackArtists(x).every(function (a) { return uris.indexOf(a) === -1; });
+      return trackArtists(x).indexOf(uri) === -1;
     });
   }
-  Spicetify.showNotification(T("Артист убран из волны"));
-  persist(); notify();
+  var name = S.artistNames[uri] || "";
+  Spicetify.showNotification(T("Волна больше не будет ставить этого артиста") + (name ? ": " + name : ""));
+  persistNow(); notify();
 }
 
 /* ------------------------------ stats ------------------------------ */
@@ -1451,8 +1509,8 @@ function TrackRow(props) {
     h("div", { className: "wave-row-dur" }, fmtDuration(t.durationMs)),
     h("div", { className: "wave-row-actions" },
       h("button", { className: "wave-icon", title: T("Нравится"), "aria-label": T("Нравится"), onClick: function () { likeTrack(t); } }, icon("heart")),
-      h("button", { className: "wave-icon", title: T("Убрать из волны"), "aria-label": T("Убрать из волны"), onClick: function () { dislikeTrack(t); } }, icon("close")),
-      h("button", { className: "wave-icon", title: T("Больше не этот артист"), "aria-label": T("Больше не этот артист"), onClick: function () { muteArtist(t); } }, icon("ban")),
+      h("button", { className: "wave-icon", title: T("Не это"), "aria-label": T("Не это"), onClick: function () { dislikeTrack(t); } }, icon("close")),
+      h("button", { className: "wave-icon", title: T("Не этот артист"), "aria-label": T("Не этот артист"), onClick: function () { muteArtist(primaryArtist(t)); } }, icon("ban")),
       h("button", { className: "wave-icon play", title: T("Играть"), "aria-label": T("Играть"), onClick: function () { props.onPlay ? props.onPlay(t) : Spicetify.Player.playUri(t.uri); } }, icon("play"))
     )
   );
@@ -1519,14 +1577,14 @@ function WaveApp() {
   function setSetting(key, value) {
     S.settings[key] = value;
     LANG_CACHE = null;
-    persist(); notify();
+    persistNow(); notify();
   }
 
   // Batch update: one persist + one render for presets.
   function applySettings(values) {
     Object.keys(values).forEach(function (k) { S.settings[k] = values[k]; });
     LANG_CACHE = null;
-    persist(); notify();
+    persistNow(); notify();
   }
 
   function applyPreset(preset, name) {
@@ -1631,7 +1689,7 @@ function WaveApp() {
   function setMorning(key, value) {
     if (!S.morning) S.morning = Object.assign({}, DEFAULTS.morning);
     S.morning[key] = value;
-    persist(); notify();
+    persistNow(); notify();
   }
 
   async function runMorning() {
@@ -2134,6 +2192,14 @@ function WaveApp() {
             onChange: function (e) { setSetting("autoExtend", e.target.checked); }
           }),
           h("span", null, T("Автопродление — добирать треки, когда волна заканчивается"))
+        ),
+        h("label", { className: "wave-toggle" },
+          h("input", {
+            type: "checkbox",
+            checked: S.settings.timeOfDay !== false,
+            onChange: function (e) { setSetting("timeOfDay", e.target.checked); }
+          }),
+          h("span", null, T("Учитывать время суток — темп волны под часы дня"))
         ),
         adv ? h("div", { className: "wave-known" },
           h("span", null, S.knownCount ? T("Исключено знакомых треков: ") + S.knownCount : T("Список знакомых треков соберётся при первой генерации")),
