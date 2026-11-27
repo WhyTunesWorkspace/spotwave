@@ -61,8 +61,10 @@ Next steps:
 
 1. ~~Fresh screenshots~~ done in v0.5.1: `docs/screenshot.png` (English UI, My mix wave) and
    `docs/marketplace-preview.png` (1200², ink + icon + wordmark + UI card).
-2. Publish `docs/launch-ru.md` (Habr) and `docs/launch-en.md` (Show HN). **Not done** - needs
-   the owner's Habr / Hacker News accounts; copy is final and includes a Telegram blurb.
+2. Publish `docs/launch-ru.md` (Habr) with cover `docs/media/habr-cover-780x440.png`. **Not done** -
+   needs the owner’s Habr account; copy is final. Show HN / Reddit / Discord drafts are
+   dropped (owner opted out). ~~GitHub social preview~~ uploaded and verified 2026-11-27:
+   `og:image` serves `repository-images.githubusercontent.com/…` at 1280x640 (532 KB, exact file).
 3. ~~Pinned feedback issue~~ created after the 0.5.1 release.
 4. ~~Scheduled morning wave~~ done in v0.6.0: prompt bar, no autoplay; simple/advanced
    settings with extra mood presets.
